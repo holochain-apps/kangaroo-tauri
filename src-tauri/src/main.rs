@@ -180,9 +180,8 @@ pub async fn install_app_if_necessary(
         let agent_key = admin_ws.generate_agent_pub_key().await
             .map_err(|e| AppError::ConductorApiError(e))?;
 
-        // unpack happ here
-        // CHANGE.ME
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/talking-stickies_0.3.0-beta-dev.8_2.happ"))
+        // replace-me --- replace the path with the correct path to your .happ file here
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/replace-me.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws
