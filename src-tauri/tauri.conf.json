@@ -6,7 +6,7 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "replace.me",
+    "productName": "replace-me",
     "version": "0.0.0"
   },
   "tauri": {
@@ -20,7 +20,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "replace.me",
+      "identifier": "replace-me",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
