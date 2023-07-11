@@ -20,6 +20,23 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run.
 
 6. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic. Whenever you change that version number, the data will be stored in a new location, meaning that a new, independent conductor will be set upfor this version.
 
+7. Build the app locally by running `npm run tauri build`
+
+## Publish cross-platform binaries
+
+To publish cross-platform binaries (not code-signed), follow these steps:
+
+1. Create a new branch `release`: `git checkout -b release`.
+
+2. Push the new branch to github to trigger the release workflow.
+
+For further releases:
+
+1. Update the version number of your app in all relevant places.
+
+2. Merge your changes from `main` into `release`
+
+3. Push to githug to trigger the release workflow.
 
 
 ## Recommended IDE Setup
