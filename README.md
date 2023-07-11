@@ -5,10 +5,7 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run.
 
 # Instructions
 
-1. Clone this repo and give it a custom name
-
-  SSH: `git clone git@github.com:holochain-apps/holochain-kangaroo.git [your-project-name]-kangaroo`<br>
-  HTTPS: `https://github.com/holochain-apps/holochain-kangaroo.git [your-project-name]-kangaroo`
+1. Click on the green "Use this template" button in this repository to create your own repository based off the Holochain Kangaroo and clone your newly created repository.
 
 2. Run `npm install` to install the relevant tauri dependencies.
 
