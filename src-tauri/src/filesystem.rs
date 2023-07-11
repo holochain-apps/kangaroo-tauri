@@ -6,9 +6,31 @@ use crate::errors::{AppError, AppResult};
 
 
 
-
 pub fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Returns a string considering the relevant part of the version regarding breaking changes
+/// Examples:
+/// 3.2.0 becomes 3.x.x
+/// 0.2.2 becomes 0.2.x
+/// 0.0.5 becomse 0.0.5
+pub fn breaking_app_version() -> AppResult<String> {
+    let cargo_version = semver::Version::parse(env!("CARGO_PKG_VERSION"))
+        .map_err(|e| AppError::SemVerError(e))?;
+
+    // has major digit? If yes, only consider major component
+    let breaking_version_string = match cargo_version.major {
+        0 => {
+            match cargo_version.minor {
+                0 => format!("0.0.{}", cargo_version.patch),
+                _ => format!("0.{}.x", cargo_version.minor),
+            }
+        },
+        _ => format!("{}.x.x", cargo_version.major)
+    };
+
+    Ok(breaking_version_string)
 }
 
 #[derive(Clone)]
@@ -26,7 +48,7 @@ impl AppFileSystem {
           .ok_or(AppError::FileSystemError(String::from(
               "Could not resolve the data dir for this app",
           )))?
-          .join(app_version())
+          .join(breaking_app_version()?)
           .join(profile);
 
       let app_config_dir = app_handle
@@ -35,7 +57,7 @@ impl AppFileSystem {
           .ok_or(AppError::FileSystemError(String::from(
               "Could not resolve the data dir for this app",
           )))?
-          .join(app_version())
+          .join(breaking_app_version()?)
           .join(profile);
 
       Ok(AppFileSystem {

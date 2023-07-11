@@ -2880,6 +2880,7 @@ dependencies = [
  "holochain_zome_types",
  "mr_bundle",
  "portpicker",
+ "semver 1.0.17",
  "serde",
  "serde_json",
  "sodoken",

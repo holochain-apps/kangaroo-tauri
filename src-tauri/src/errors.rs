@@ -20,6 +20,9 @@ pub enum AppError {
     #[error("Database error: `{0}`")]
     DatabaseError(String),
 
+    #[error("Failed to conver package version to breaking version string: `{0:?}`")]
+    SemVerError(semver::Error),
+
     #[error(transparent)]
     AppBundleError(#[from] AppBundleError),
 
