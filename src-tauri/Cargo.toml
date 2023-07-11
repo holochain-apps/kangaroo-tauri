@@ -1,6 +1,6 @@
 [package]
 name = "holochain-kangaroo" # rename-me
-version = "0.0.0"
+version = "0.0.0" # rename-me -- Choose wisely, see "Note on Versioning" in README
 description = "A Tauri App"
 authors = ["you"]
 license = ""

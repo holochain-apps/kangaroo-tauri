@@ -73,16 +73,14 @@ is a breaking change due to one of the above mentioned scenarios**.
 
 ## Note on Versioning
 
-The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/). This has implications on your Choice of package versions in `src-tauri/Cargo.toml`.
+The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/). This has implications on your choice of package versions you give to your app in `src-tauri/Cargo.toml`.
 
 <pre>Example:
-Apps built with Cargo.toml versions 0.0.2 and 0.0.3 will land in separate folders on the filesystem and will have independent
-Holochain conductors. From end-user perspective this is a breaking change and opening a 0.0.3 version of your app won't provide
-access to data stored with the 0.0.2 version of your app.
+Binaries built with Cargo.toml versions 0.0.2 and 0.0.3 will store their data in separate subfolder on the filesystem and will have independent Holochain conductors. From end-user perspective this is a breaking change and opening a 0.0.3 version of your app won't provide access to data stored with the 0.0.2 version of your app.
 
-Apps built with Cargo.toml versions 0.3.2 and 0.3.4 will share the same folder `0.3.x` on the filesystem and will share the same Holochain conductor.
+Binaries built with Cargo.toml versions 0.3.2 and 0.3.4 will share the same subfolder `0.3.x` on the filesystem and will share the same Holochain conductor.
 
-Apps built with Cargo.toml versions 2.0.5 and 2.3.4 will share the same folder `2.x.x` on the filesystem and will share the same Holochain conductor.</pre>
+Binaries built with Cargo.toml versions 2.0.5 and 2.3.4 will share the same subfolder `2.x.x` on the filesystem and will share the same Holochain conductor.</pre>
 
 ## Troubleshooting
 

@@ -20,7 +20,7 @@ pub fn build_menu() -> Menu {
   // special menu for macOS
   if cfg!(target_os = "macos") {
     let launcher_menu_submenu = Submenu::new(
-      "rename-me", // This is the menu title on macOS
+      "replace-me", // This is the menu title on macOS. You may for example have it be the name of your app.
       Menu::new()
         .add_item(restart)
         .add_item(quit)
