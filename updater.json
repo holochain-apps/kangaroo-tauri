@@ -1,0 +1,23 @@
+{
+  "version": "v[[version number]]",
+  "notes": "Release notes: [[add release notes here]]",
+  "pub_date": "2023-07-11T22:24:00Z",
+  "platforms": {
+    "darwin-x86_64": {
+      "signature": "",
+      "url": ""
+    },
+    "darwin-aarch64": {
+      "signature": "",
+      "url": ""
+    },
+    "linux-x86_64": {
+      "signature": "",
+      "url": ""
+    },
+    "windows-x86_64": {
+      "signature": "",
+      "url": ""
+    }
+  }
+}
