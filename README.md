@@ -42,6 +42,44 @@ For further releases:
 3. Push to github to trigger the release workflow.
 
 
+## Code-signed cross-platform binaries
+
+The `.github/workflows/release-codesigned.yaml` contains a template workflow for binaries with macOS as well as Windows EV Certificate code signing. The workflow gets triggered when publishing on branch `release-codesigned`.
+
+The macOS code signing is based on tauri's instructions [here](https://tauri.app/v1/guides/distribution/sign-macos).
+
+The Windows code signing with EV cert is absed on [these](https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/) instructions and uses a slightly modified [fork](https://github.com/matthme/tauri-action-ev-signing/) of tauri's github actions.
+
+For the Windows part or if you want to only do macOS code signing, follow the instructions in the comments in `release-codesigned.yaml` (search for the keyword `HELP`).
+
+If you want to sign your Windows binaries with an OV certificate instead of an EV certificate, follow [tauri's instructions](https://tauri.app/v1/guides/distribution/sign-windows).
+
+
+## Auto-Updating of your app
+
+To add automatic updates to your app, you may follow the instructions [here](https://tauri.app/v1/guides/distribution/updater).
+An empty `updater.json` template file is part of this repository.
+
+Some important notes:
+
+* The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/).
+
+<pre>Example:
+Apps built with Cargo.toml versions 0.0.2 and 0.0.3 will land in separate folders on the filesystem and will have independent
+Holochain conductors. From end-user perspective this is a breaking change and opening a 0.0.3 version of your app won't provide
+access to data stored with the 0.0.2 version of your app.
+
+Apps built with Cargo.toml versions 0.3.2 and 0.3.4 will share the same folder `0.3.x` on the filesystem and will share the same Holochain conductor.
+
+Apps built with Cargo.toml versions 2.0.5 and 2.3.4 will share the same folder `2.x.x` on the filesystem and will share the same Holochain conductor.</pre>
+
+* If you bump your Holochain (and/or) lair keystore version, you need to consider whether it remains compatible with the existing Holochain conductor / lair keystore.
+
+As a consequence, **be careful not to trigger automatic updates on your end-users if your app
+is a breaking change due to one of the above mentioned scenarios**.
+
+
+
 ## Troubleshooting
 
 * If you get the error `Error failed to bundle project: Failed to build data folders and files` when running `npm run tauri build`, a likely reason is that your `productName` in `src-tauri/tauri.conf.json` contains invalid characters, such as dots (`.`)
