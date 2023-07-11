@@ -181,7 +181,7 @@ pub async fn install_app_if_necessary(
 
         // unpack happ here
         // CHANGE.ME
-        let app_bundle = AppBundle::decode(include_bytes!("../../replace.me.happ"))
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/replace.me.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws

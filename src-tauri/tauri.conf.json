@@ -1,7 +1,6 @@
 {
   "build": {
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
     "devPath": "../pouch/ui",
     "distDir": "../pouch/ui",
     "withGlobalTauri": true
