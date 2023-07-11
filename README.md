@@ -84,7 +84,8 @@ is a breaking change due to one of the above mentioned scenarios**.
 
 * If you get the error `Error failed to bundle project: Failed to build data folders and files` when running `npm run tauri build`, a likely reason is that your `productName` in `src-tauri/tauri.conf.json` contains invalid characters, such as dots (`.`)
 
-* If building the app fails with errors like `Error: Resource not accessible by integration`, `Error: No artifacts were found.` or `Error failed to bundle project: error running light.exe` the reason may again be that the `productName` in `src-tauri/tauri.conf.json` contains invalid characters such as parentheses (`(` or `)`) or possibly other unsupported special characters.
+* If building the app fails with errors like `Error: No artifacts were found.` or `Error failed to bundle project: error running light.exe` the reason may again be that the `productName` in `src-tauri/tauri.conf.json` contains invalid characters such as parentheses (`(` or `)`) or possibly other unsupported special characters.
+
 
 
 ## Recommended IDE Setup
