@@ -12,14 +12,14 @@ use holochain::{conductor::{
     Conductor, ConductorHandle,
 }, prelude::kitsune_p2p::dependencies::kitsune_p2p_types::dependencies::lair_keystore_api::prelude::BinDataSized};
 use holochain_types::prelude::{AppBundle, ZomeCallUnsigned};
-use holochain_zome_types::{Signature, CellId, ZomeName, FunctionName, CapSecret, ExternIO, Timestamp, Nonce256Bits};
+use holochain_zome_types::{Signature, CellId, ZomeName, FunctionName, CapSecret, ExternIO, Timestamp};
 
 use serde::Deserialize;
 
 
 use holochain_client::{AdminWebsocket, InstallAppPayload, ZomeCall, AgentPubKey};
 
-use menu::build_menu;
+use menu::{build_menu, handle_menu_event};
 use tauri::{Manager, WindowBuilder};
 
 const APP_ID: &str = "replace-me";
@@ -78,6 +78,7 @@ async fn sign_zome_call(
 fn main() {
     tauri::Builder::default()
         .menu(build_menu())
+        .on_menu_event(|event| handle_menu_event(event.menu_item_id(), event.window()))
         .invoke_handler(tauri::generate_handler![sign_zome_call])
         .setup(|app| {
 

@@ -1,6 +1,5 @@
 use holochain::{conductor::error::ConductorError, prelude::AppBundleError};
 use holochain_client::ConductorApiError;
-use serde::Serialize;
 
 
 #[derive(Debug, thiserror::Error)]

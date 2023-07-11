@@ -5,11 +5,6 @@ use tauri::AppHandle;
 use crate::errors::{AppError, AppResult};
 
 
-
-pub fn app_version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
-}
-
 /// Returns a string considering the relevant part of the version regarding breaking changes
 /// Examples:
 /// 3.2.0 becomes 3.x.x
