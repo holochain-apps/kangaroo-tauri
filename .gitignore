@@ -1,7 +1,4 @@
 # app assets
-pouch/*
-*.happ
-*.webhapp
 
 # Logs
 logs

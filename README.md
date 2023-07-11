@@ -36,7 +36,7 @@ For further releases:
 
 2. Merge your changes from `main` into `release`
 
-3. Push to githug to trigger the release workflow.
+3. Push to github to trigger the release workflow.
 
 
 ## Recommended IDE Setup
