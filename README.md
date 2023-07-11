@@ -7,7 +7,8 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run.
 
 0. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X).
 
-1. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it. Using it as a template allows you to start with a clean git history and the contributers of this repository won't show up as contributors to your new repository. Forking it on the other hand has the advantage of being able to relatively easily pull in updates from its parent repository at a later stage.
+1. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it.<br>
+(Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.)
 
 2. After cloning the newly created repository, run `npm install` to install the relevant tauri dependencies.
 
