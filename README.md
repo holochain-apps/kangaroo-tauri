@@ -5,6 +5,8 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run.
 
 # Instructions
 
+0. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X).
+
 1. Click on the green "Use this template" button in this repository to create your own repository based off the Holochain Kangaroo and clone your newly created repository.
 
 2. Run `npm install` to install the relevant tauri dependencies.
@@ -15,7 +17,7 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run.
 
 5. Add your unpacked `ui.zip` to `./pouch/ui`
 
-6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided
+6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots.
 
 7. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
 
@@ -39,6 +41,12 @@ For further releases:
 
 3. Push to github to trigger the release workflow.
 
+
+## Troubleshooting
+
+* If you get the error `Error failed to bundle project: Failed to build data folders and files` when running `npm run tauri build`, a likely reason is that your `productName` in `src-tauri/tauri.conf.json` contains invalid characters, such as dots (`.`)
+
+*
 
 ## Recommended IDE Setup
 
