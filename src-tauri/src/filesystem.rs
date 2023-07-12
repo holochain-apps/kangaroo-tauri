@@ -12,7 +12,7 @@ use crate::errors::{AppError, AppResult};
 /// 0.0.5 becomes 0.0.5
 /// 0.2.3-alpha.2 remains 0.2.3-alpha.2 --> pre-releases always get their own storage location since we have to assume breaking changes
 pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
-    let app_version = app_handle.package_info().version;
+    let app_version = app_handle.package_info().version.clone();
 
     if app_version.pre.is_empty() == false {
         return Ok(app_version.to_string());
