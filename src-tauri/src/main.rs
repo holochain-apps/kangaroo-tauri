@@ -81,9 +81,9 @@ fn main() {
             let fs = AppFileSystem::new(&handle, &profile)?;
 
             // set up logs
-            // if let Err(err) = setup_logs(fs.clone()) {
-            //     println!("Error setting up the logs: {:?}", err);
-            // }
+            if let Err(err) = setup_logs(fs.clone()) {
+                println!("Error setting up the logs: {:?}", err);
+            }
 
             app.manage(fs.clone());
 
