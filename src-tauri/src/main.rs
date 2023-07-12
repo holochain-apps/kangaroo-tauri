@@ -15,29 +15,46 @@ use holochain_types::prelude::AppBundle;
 
 use holochain_client::{AdminWebsocket, InstallAppPayload};
 
+use logs::{setup_logs, log};
 use menu::{build_menu, handle_menu_event};
-use tauri::{Manager, WindowBuilder};
+use system_tray::{handle_system_tray_event, app_system_tray};
+use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL};
 
-const APP_ID: &str = "replace-me";
-const PASSWORD: &str = "pass";
-// replace-me -- optional: You may want to put a network seed here or read it secretly from an environment variable
-const NETWORK_SEED: Option<String> = None;
+const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
+const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
+pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
+const PASSWORD: &str = "pass"; // Password to the lair keystore
+const NETWORK_SEED: Option<String> = None; // replace-me (optional): You may want to put a network seed here or read it secretly from an environment variable
+
 
 
 mod errors;
 mod filesystem;
 mod menu;
+mod logs;
+mod system_tray;
 mod utils;
 
 
 
 fn main() {
-    tauri::Builder::default()
+
+    let builder_result = tauri::Builder::default()
+
+        // optional (OSmenu) -- Adds an OS menu to the app
         .menu(build_menu())
         .on_menu_event(|event| handle_menu_event(event.menu_item_id(), event.window()))
-        .invoke_handler(tauri::generate_handler![sign_zome_call])
+
+        // optional (systray) -- Adds your app with an icon to the OS system tray.
+        .system_tray(SystemTray::new().with_menu(app_system_tray()))
+        .on_system_tray_event(|app, event| match event {
+          SystemTrayEvent::MenuItemClick { id, .. } => handle_system_tray_event(app, id),
+          _ => {}
+        })
+
+        .invoke_handler(tauri::generate_handler![sign_zome_call, log])
         .setup(|app| {
 
             let handle = app.handle();
@@ -46,6 +63,11 @@ fn main() {
 
             // start conductor and lair
             let fs = AppFileSystem::new(&handle, &profile)?;
+
+            // set up logs
+            // if let Err(err) = setup_logs(fs.clone()) {
+            //     println!("Error setting up the logs: {:?}", err);
+            // }
 
             app.manage(fs.clone());
 
@@ -56,13 +78,13 @@ fn main() {
 
                 let _app_window = WindowBuilder::new(
                     app,
-                    "app",
+                    "main",
                     tauri::WindowUrl::App("index.html".into())
                   )
-                    .inner_size(1200.0, 880.0)
+                    .inner_size(1400.0, 880.0)
                     .resizable(true)
-                    .fullscreen(false)
-                    .title(APP_ID) // CHANGE.ME
+                    .title(WINDOW_TITLE)
+                    .data_directory(fs.app_data_dir)
                     .center()
                     .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, APP_ID).as_str())
                     .initialization_script(ZOOM_ON_SCROLL)
@@ -71,9 +93,23 @@ fn main() {
 
             Ok(())
 
-        })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        }).build(tauri::generate_context!());
+
+        match builder_result {
+            Ok(builder) => {
+              builder.run(|_app_handle, event| {
+                // optional (systray):
+                // This event is emitted upon pressing the x to close the App window
+                // The app is prevented from exiting to keep it running in the background with the system tray
+                // Remove those lines below with () if you don't want the systray functionality
+                if let RunEvent::ExitRequested { api, .. } = event {
+                  api.prevent_exit();
+                }
+              });
+            }
+            Err(err) => log::error!("Error building the app: {:?}", err),
+        }
+
 }
 
 
@@ -97,8 +133,10 @@ pub async fn launch(
         },
     }]);
 
-    // TODO: set the DHT arc depending on whether this is mobile
+    std::env::set_var("RUST_LOG", "WARN");
+    std::env::set_var("WASM_LOG", "WARN");
 
+    // TODO: set the DHT arc depending on whether this is mobile (tauri 2.0)
     let conductor = Conductor::builder()
         .config(config)
         .passphrase(
@@ -123,6 +161,8 @@ pub async fn launch(
     Ok((conductor, app_port, admin_port))
 }
 
+
+
 pub async fn install_app_if_necessary(
     network_seed: Option<String>,
     admin_ws: &mut AdminWebsocket,
@@ -141,7 +181,7 @@ pub async fn install_app_if_necessary(
             .map_err(|e| AppError::ConductorApiError(e))?;
 
         // replace-me --- replace the path with the correct path to your .happ file here
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/replace-me.happ"))
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/word-condenser.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws

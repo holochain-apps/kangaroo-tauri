@@ -32,33 +32,45 @@ pub fn breaking_app_version() -> AppResult<String> {
 pub struct AppFileSystem {
   pub app_data_dir: PathBuf,
   pub app_config_dir: PathBuf,
+  pub app_log_dir: PathBuf,
 }
 
 impl AppFileSystem {
-  pub fn new(app_handle: &AppHandle, profile: &String) -> AppResult<AppFileSystem> {
+    pub fn new(app_handle: &AppHandle, profile: &String) -> AppResult<AppFileSystem> {
 
-      let app_data_dir = app_handle
-          .path_resolver()
-          .app_data_dir()
-          .ok_or(AppError::FileSystemError(String::from(
-              "Could not resolve the data dir for this app",
-          )))?
-          .join(breaking_app_version()?)
-          .join(profile);
+        let app_data_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .ok_or(AppError::FileSystemError(String::from(
+                "Could not resolve the data dir for this app",
+            )))?
+            .join(breaking_app_version()?)
+            .join(profile);
 
-      let app_config_dir = app_handle
-          .path_resolver()
-          .app_config_dir()
-          .ok_or(AppError::FileSystemError(String::from(
-              "Could not resolve the data dir for this app",
-          )))?
-          .join(breaking_app_version()?)
-          .join(profile);
+        let app_config_dir = app_handle
+            .path_resolver()
+            .app_config_dir()
+            .ok_or(AppError::FileSystemError(String::from(
+                "Could not resolve the data dir for this app",
+            )))?
+            .join(breaking_app_version()?)
+            .join(profile);
 
-      Ok(AppFileSystem {
-          app_data_dir,
-          app_config_dir,
-      })
+        let app_log_dir = app_handle
+            .path_resolver()
+            .app_log_dir()
+            .ok_or(AppError::FileSystemError(String::from(
+                "Could not resolve the log dir for this app",
+            )))?
+            .join(breaking_app_version()?)
+            .join(profile);
+
+
+        Ok(AppFileSystem {
+            app_data_dir,
+            app_config_dir,
+            app_log_dir,
+        })
   }
 
   pub fn keystore_path(&self) -> PathBuf {
