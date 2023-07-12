@@ -18,13 +18,15 @@ use holochain_client::{AdminWebsocket, InstallAppPayload};
 use logs::{setup_logs, log};
 use menu::{build_menu, handle_menu_event};
 use system_tray::{handle_system_tray_event, app_system_tray};
-use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent};
+use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, App, Window};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL};
 
 const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
 const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
 pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
+pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
+pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
 const NETWORK_SEED: Option<String> = None; // replace-me (optional): You may want to put a network seed here or read it secretly from an environment variable
 
@@ -54,6 +56,20 @@ fn main() {
           _ => {}
         })
 
+        // optional (single-instance) -- Allows only a single instance of your app running. Useful in combination with the systray
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            let main_window = app.get_window("main");
+            if let Some(window) = main_window {
+                window.show().unwrap();
+                window.unminimize().unwrap();
+                window.set_focus().unwrap();
+            } else {
+                let fs = app.state::<AppFileSystem>().inner().to_owned();
+                let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
+                let _r = build_main_window(fs, app, app_port, admin_port);
+            }
+        }))
+
         .invoke_handler(tauri::generate_handler![sign_zome_call, log])
         .setup(|app| {
 
@@ -75,20 +91,9 @@ fn main() {
                 let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
 
                 app.manage(Mutex::new(conductor));
+                app.manage((app_port, admin_port));
 
-                let _app_window = WindowBuilder::new(
-                    app,
-                    "main",
-                    tauri::WindowUrl::App("index.html".into())
-                  )
-                    .inner_size(1400.0, 880.0)
-                    .resizable(true)
-                    .title(WINDOW_TITLE)
-                    .data_directory(fs.app_data_dir)
-                    .center()
-                    .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, APP_ID).as_str())
-                    .initialization_script(ZOOM_ON_SCROLL)
-                    .build().unwrap();
+                let _app_window: Window = build_main_window(fs, &app.app_handle(), app_port, admin_port);
             });
 
             Ok(())
@@ -113,7 +118,22 @@ fn main() {
 }
 
 
-
+pub fn build_main_window(fs: AppFileSystem, app_handle: &AppHandle, app_port: u16, admin_port: u16) -> Window {
+    WindowBuilder::new(
+        &app_handle.app_handle(),
+        "main",
+        tauri::WindowUrl::App("index.html".into())
+      )
+        .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+        .resizable(true)
+        .title(WINDOW_TITLE)
+        .data_directory(fs.app_data_dir)
+        .center()
+        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, APP_ID).as_str())
+        .initialization_script(ZOOM_ON_SCROLL)
+        .build()
+        .unwrap()
+}
 
 pub async fn launch(
     fs: &AppFileSystem,
@@ -181,7 +201,7 @@ pub async fn install_app_if_necessary(
             .map_err(|e| AppError::ConductorApiError(e))?;
 
         // replace-me --- replace the path with the correct path to your .happ file here
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/word-condenser.happ"))
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/replace-me.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws

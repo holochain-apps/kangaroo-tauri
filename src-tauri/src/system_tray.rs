@@ -1,9 +1,5 @@
-use tauri::{
-  window::WindowBuilder, AppHandle, CustomMenuItem, Manager, SystemTrayMenu,
-  WindowUrl, Wry, SystemTrayMenuItem,
-};
-
-use crate::WINDOW_TITLE;
+use tauri::{AppHandle, CustomMenuItem, Manager, SystemTrayMenu, Wry, SystemTrayMenuItem};
+use crate::{filesystem::AppFileSystem, build_main_window};
 
 pub fn handle_system_tray_event(app: &AppHandle<Wry>, event_id: String) {
   match event_id.as_str() {
@@ -15,12 +11,9 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, event_id: String) {
         window.unminimize().unwrap();
         window.set_focus().unwrap();
       } else {
-        let r = WindowBuilder::new(app, "main", WindowUrl::App("index.html".into()))
-          .inner_size(1400.0, 880.0)
-          .title(WINDOW_TITLE)
-          .build();
-
-        log::info!("Creating main window {:?}", r);
+        let fs = app.state::<AppFileSystem>().inner().to_owned();
+        let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
+        let _r = build_main_window(fs, app, app_port, admin_port);
       }
     }
     "restart" => app.app_handle().restart(),
