@@ -9,20 +9,23 @@ use crate::errors::{AppError, AppResult};
 /// Examples:
 /// 3.2.0 becomes 3.x.x
 /// 0.2.2 becomes 0.2.x
-/// 0.0.5 becomse 0.0.5
-pub fn breaking_app_version() -> AppResult<String> {
-    let cargo_version = semver::Version::parse(env!("CARGO_PKG_VERSION"))
-        .map_err(|e| AppError::SemVerError(e))?;
+/// 0.0.5 becomes 0.0.5
+/// 0.2.3-alpha.2 remains 0.2.3-alpha.2 --> pre-releases always get their own storage location since we have to assume breaking changes
+pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
+    let app_version = app_handle.package_info().version;
 
-    // has major digit? If yes, only consider major component
-    let breaking_version_string = match cargo_version.major {
+    if app_version.pre.is_empty() == false {
+        return Ok(app_version.to_string());
+    }
+
+    let breaking_version_string = match app_version.major {
         0 => {
-            match cargo_version.minor {
-                0 => format!("0.0.{}", cargo_version.patch),
-                _ => format!("0.{}.x", cargo_version.minor),
+            match app_version.minor {
+                0 => format!("0.0.{}", app_version.patch),
+                _ => format!("0.{}.x", app_version.minor),
             }
         },
-        _ => format!("{}.x.x", cargo_version.major)
+        _ => format!("{}.x.x", app_version.major)
     };
 
     Ok(breaking_version_string)
@@ -44,7 +47,7 @@ impl AppFileSystem {
             .ok_or(AppError::FileSystemError(String::from(
                 "Could not resolve the data dir for this app",
             )))?
-            .join(breaking_app_version()?)
+            .join(breaking_app_version(app_handle)?)
             .join(profile);
 
         let app_config_dir = app_handle
@@ -53,7 +56,7 @@ impl AppFileSystem {
             .ok_or(AppError::FileSystemError(String::from(
                 "Could not resolve the data dir for this app",
             )))?
-            .join(breaking_app_version()?)
+            .join(breaking_app_version(app_handle)?)
             .join(profile);
 
         let app_log_dir = app_handle
@@ -62,7 +65,7 @@ impl AppFileSystem {
             .ok_or(AppError::FileSystemError(String::from(
                 "Could not resolve the log dir for this app",
             )))?
-            .join(breaking_app_version()?)
+            .join(breaking_app_version(app_handle)?)
             .join(profile);
 
 

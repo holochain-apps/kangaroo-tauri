@@ -18,7 +18,7 @@ use holochain_client::{AdminWebsocket, InstallAppPayload};
 use logs::{setup_logs, log};
 use menu::{build_menu, handle_menu_event};
 use system_tray::{handle_system_tray_event, app_system_tray};
-use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, App, Window};
+use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL};
 

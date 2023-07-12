@@ -36,7 +36,7 @@ tauri = { version = "1.4", features = ["devtools", "dialog", "system-tray", "she
 thiserror = "1"
 
 # optional (single-instance):
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri-plugin-single-instance = { git = "https://github.com/matthme/plugins-workspace", branch = "single-instance-semver" }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
