@@ -2949,6 +2949,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-single-instance",
  "thiserror",
+ "url2",
 ]
 
 [[package]]

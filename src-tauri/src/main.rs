@@ -6,11 +6,11 @@ use std::collections::HashMap;
 use crate::errors::{AppError, AppResult};
 use filesystem::AppFileSystem;
 use futures::lock::Mutex;
-use holochain::conductor::{
+use holochain::{conductor::{
     config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
     interface::InterfaceDriver,
     Conductor, ConductorHandle,
-};
+}, prelude::{KitsuneP2pConfig, TransportConfig}};
 use holochain_types::prelude::AppBundle;
 
 use holochain_client::{AdminWebsocket, InstallAppPayload};
@@ -29,6 +29,7 @@ pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is op
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
 const NETWORK_SEED: Option<String> = None; // replace-me (optional): You may want to put a network seed here or read it secretly from an environment variable
+const SIGNALING_SERVER: &str = "wss://signal.holo.host"; // replace-me (optional): Change the signaling server if you want
 
 
 
@@ -153,8 +154,11 @@ pub async fn launch(
         },
     }]);
 
-    std::env::set_var("RUST_LOG", "WARN");
-    std::env::set_var("WASM_LOG", "WARN");
+    let mut network_config = KitsuneP2pConfig::default();
+    network_config.bootstrap_service = Some(url2::url2!("https://bootstrap.holo.host")); // replace-me (optional) -- change bootstrap server URL here if desired
+    network_config.transport_pool.push(TransportConfig::WebRTC {
+        signal_url: SIGNALING_SERVER.into(),
+    });
 
     // TODO: set the DHT arc depending on whether this is mobile (tauri 2.0)
     let conductor = Conductor::builder()
