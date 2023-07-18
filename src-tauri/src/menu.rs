@@ -25,7 +25,7 @@ pub fn build_menu() -> Menu {
 
 	// special menu for macOS
 	if cfg!(target_os = "macos") {
-	let launcher_menu_submenu = Submenu::new(
+	let app_menu_submenu = Submenu::new(
 		"replace-me", // This is the menu title on macOS. You may for example have it be the name of your app.
 		Menu::new()
 		.add_item(version)
@@ -36,7 +36,7 @@ pub fn build_menu() -> Menu {
 	);
 
 	return Menu::os_default(APP_NAME)
-		.add_submenu(launcher_menu_submenu)
+		.add_submenu(app_menu_submenu)
 	}
 
 	Menu::new()
@@ -47,7 +47,7 @@ pub fn handle_menu_event(event_id: &str, window: &Window<Wry>) {
   let app_handle = window.app_handle();
   let fs = app_handle.state::<AppFileSystem>();
   match event_id {
-	"version" => message(Some(&window), APP_NAME, app_handle.package_info().version.to_string().as_str()),
+	"version" => message(Some(&window), APP_NAME, format!("Version {}", app_handle.package_info().version.to_string().as_str())),
     "open_logs" => open_logs_folder(fs.inner().to_owned()),
     "devtools" => window.open_devtools(),
     "restart" => app_handle.restart(),
