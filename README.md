@@ -64,7 +64,7 @@ Some important notes:
 
 * The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/). See [Note on versioning](#note-on-versioning)
 
-* If you bump your Holochain (and/or) lair keystore version, you need to consider whether it remains compatible with the existing Holochain conductor / lair keystore.
+* If you bump your Holochain and/or lair keystore version, you need to consider whether it remains compatible with the existing Holochain conductor / lair keystore.
 
 As a consequence, **be careful not to trigger automatic updates on your end-users if your app
 is a breaking change due to one of the above mentioned scenarios**.
