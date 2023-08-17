@@ -20,6 +20,16 @@
         "open": true
       }
     },
+    "cli": {
+      "description": "Running replace-me from the command line",
+      "args": [
+        {
+          "name": "profile",
+          "takesValue": true,
+          "multiple": false
+        }
+      ]
+    },
     "systemTray": {
       "iconPath": "icons/32x32.png"
     },

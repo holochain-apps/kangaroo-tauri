@@ -7747,6 +7747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fbe522898e35407a8e60dc3870f7579fea2fc262a6a6072eccdd37ae1e1d91e"
 dependencies = [
  "anyhow",
+ "clap 3.2.25",
  "cocoa",
  "dirs-next",
  "embed_plist",

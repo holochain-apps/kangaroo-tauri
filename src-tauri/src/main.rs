@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::errors::{AppError, AppResult};
-use filesystem::AppFileSystem;
+use filesystem::{AppFileSystem, Profile};
 use futures::lock::Mutex;
 use holochain::{conductor::{
     config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
@@ -17,8 +17,9 @@ use holochain_client::{AdminWebsocket, InstallAppPayload};
 
 use logs::{setup_logs, log};
 use menu::{build_menu, handle_menu_event};
+use serde_json::Value;
 use system_tray::{handle_system_tray_event, app_system_tray};
-use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window};
+use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window, App};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL};
 
@@ -76,7 +77,7 @@ fn main() {
 
             let handle = app.handle();
 
-            let profile = String::from("default");
+            let profile = read_profile_from_cli(app)?;
 
             // start conductor and lair
             let fs = AppFileSystem::new(&handle, &profile)?;
@@ -185,6 +186,37 @@ pub async fn launch(
     install_app_if_necessary(NETWORK_SEED, &mut admin_ws).await?;
 
     Ok((conductor, app_port, admin_port))
+}
+
+
+fn read_profile_from_cli(app: &mut App) -> Result<Profile, tauri::Error> {
+    // reading profile from cli
+    let cli_matches = app.get_cli_matches()?;
+    let profile: Profile = match cli_matches.args.get("profile") {
+    Some(data) => match data.value.clone() {
+        Value::String(profile) => {
+        if profile == "default" {
+            eprintln!("Error: The name 'default' is not allowed for a profile.");
+            panic!("Error: The name 'default' is not allowed for a profile.");
+        }
+        // \, /, and ? have a meaning as path symbols or domain socket url symbols and are therefore not allowed
+        // because they would break stuff
+        if profile.contains("/") || profile.contains("\\") || profile.contains("?") {
+            eprintln!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
+            panic!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
+        }
+        profile
+        },
+        _ => {
+        // println!("ERROR: Value passed to --profile option could not be interpreted as string.");
+        String::from("default")
+        // panic!("Value passed to --profile option could not be interpreted as string.")
+        }
+    },
+        None => String::from("default")
+    };
+
+    Ok(profile)
 }
 
 

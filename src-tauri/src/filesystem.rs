@@ -31,6 +31,7 @@ pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
     Ok(breaking_version_string)
 }
 
+pub type Profile = String;
 #[derive(Clone)]
 pub struct AppFileSystem {
   pub app_data_dir: PathBuf,
@@ -39,7 +40,7 @@ pub struct AppFileSystem {
 }
 
 impl AppFileSystem {
-    pub fn new(app_handle: &AppHandle, profile: &String) -> AppResult<AppFileSystem> {
+    pub fn new(app_handle: &AppHandle, profile: &Profile) -> AppResult<AppFileSystem> {
 
         let app_data_dir = app_handle
             .path_resolver()
