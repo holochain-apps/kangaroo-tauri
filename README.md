@@ -10,7 +10,7 @@ This repository let's you easily convert your Holochain app into a standalone ta
 1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). If you are on Linux, follow [these](https://tauri.app/v1/guides/getting-started/prerequisites#1-system-dependencies) instructions to also install the required system dependencies for tauri.
 
 2. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it.<br>
-(Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.)
+(Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**)
 
 3. After cloning the newly created repository, run `npm install` to install the relevant tauri dependencies.
 
