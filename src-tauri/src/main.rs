@@ -21,7 +21,9 @@ use serde_json::Value;
 use system_tray::{handle_system_tray_event, app_system_tray};
 use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window, App};
 
-use utils::{sign_zome_call, ZOOM_ON_SCROLL};
+use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
+use commands::{profile::{get_existing_profiles, set_active_profile, get_active_profile, open_profile_settings}, restart::restart};
+
 
 const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
 const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
@@ -40,6 +42,7 @@ mod menu;
 mod logs;
 mod system_tray;
 mod utils;
+mod commands;
 
 
 
@@ -47,8 +50,6 @@ fn main() {
 
     let builder_result = tauri::Builder::default()
 
-        // optional (OSmenu) -- Adds an OS menu to the app
-        .menu(build_menu())
         .on_menu_event(|event| handle_menu_event(event.menu_item_id(), event.window()))
 
         // optional (systray) -- Adds your app with an icon to the OS system tray.
@@ -72,12 +73,30 @@ fn main() {
             }
         }))
 
-        .invoke_handler(tauri::generate_handler![sign_zome_call, log])
+        .invoke_handler(tauri::generate_handler![
+            sign_zome_call,
+            log,
+            set_active_profile,
+            get_active_profile,
+            get_existing_profiles,
+            open_profile_settings,
+            restart,
+        ])
         .setup(|app| {
 
             let handle = app.handle();
 
-            let profile = read_profile_from_cli(app)?;
+            // convert profile from CLI to option, then read from filesystem instead. if profile from CLI,
+            // then set current profile!
+            let profile_from_cli = read_profile_from_cli(app)?;
+
+            let profile = match profile_from_cli {
+                Some(profile) => profile,
+                None => {
+                    let fs_tmp = AppFileSystem::new(&handle, &String::from("default"))?;
+                    fs_tmp.get_active_profile()
+                },
+            };
 
             // start conductor and lair
             let fs = AppFileSystem::new(&handle, &profile)?;
@@ -88,6 +107,11 @@ fn main() {
             }
 
             app.manage(fs.clone());
+
+
+            #[cfg(target_family="unix")]
+            create_and_apply_lair_symlink(fs.keystore_dir())?;
+
 
             tauri::async_runtime::block_on(async move {
                 let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
@@ -126,10 +150,12 @@ pub fn build_main_window(fs: AppFileSystem, app_handle: &AppHandle, app_port: u1
         "main",
         tauri::WindowUrl::App("index.html".into())
       )
+        // optional (OSmenu) -- Adds an OS menu to the app
+        .menu(build_menu())
         .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
         .resizable(true)
         .title(WINDOW_TITLE)
-        .data_directory(fs.app_data_dir)
+        .data_directory(fs.profile_data_dir)
         .center()
         .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, APP_ID).as_str())
         .initialization_script(ZOOM_ON_SCROLL)
@@ -142,9 +168,9 @@ pub async fn launch(
     password: String,
 ) -> AppResult<(ConductorHandle, u16, u16)> {
     let mut config = ConductorConfig::default();
-    config.environment_path = fs.conductor_path().into();
+    config.environment_path = fs.conductor_dir().into();
     config.keystore = KeystoreConfig::LairServerInProc {
-        lair_root: Some(fs.keystore_path()),
+        lair_root: Some(fs.keystore_dir()),
     };
 
     let admin_port = portpicker::pick_unused_port().expect("Cannot find any unused port");
@@ -189,31 +215,31 @@ pub async fn launch(
 }
 
 
-fn read_profile_from_cli(app: &mut App) -> Result<Profile, tauri::Error> {
+fn read_profile_from_cli(app: &mut App) -> Result<Option<Profile>, tauri::Error> {
     // reading profile from cli
     let cli_matches = app.get_cli_matches()?;
-    let profile: Profile = match cli_matches.args.get("profile") {
-    Some(data) => match data.value.clone() {
-        Value::String(profile) => {
-        if profile == "default" {
-            eprintln!("Error: The name 'default' is not allowed for a profile.");
-            panic!("Error: The name 'default' is not allowed for a profile.");
-        }
-        // \, /, and ? have a meaning as path symbols or domain socket url symbols and are therefore not allowed
-        // because they would break stuff
-        if profile.contains("/") || profile.contains("\\") || profile.contains("?") {
-            eprintln!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
-            panic!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
-        }
-        profile
+    let profile: Option<Profile> = match cli_matches.args.get("profile") {
+        Some(data) => match data.value.clone() {
+            Value::String(profile) => {
+            if profile == "default" {
+                eprintln!("Error: The name 'default' is not allowed for a profile.");
+                panic!("Error: The name 'default' is not allowed for a profile.");
+            }
+            // \, /, and ? have a meaning as path symbols or domain socket url symbols and are therefore not allowed
+            // because they would break stuff
+            if profile.contains("/") || profile.contains("\\") || profile.contains("?") {
+                eprintln!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
+                panic!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
+            }
+            Some(profile)
+            },
+            _ => {
+            // println!("ERROR: Value passed to --profile option could not be interpreted as string.");
+            None
+            // panic!("Value passed to --profile option could not be interpreted as string.")
+            }
         },
-        _ => {
-        // println!("ERROR: Value passed to --profile option could not be interpreted as string.");
-        String::from("default")
-        // panic!("Value passed to --profile option could not be interpreted as string.")
-        }
-    },
-        None => String::from("default")
+        None => None
     };
 
     Ok(profile)

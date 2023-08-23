@@ -1,8 +1,8 @@
 {
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devPath": "../pouch/ui",
-    "distDir": "../pouch/ui",
+    "devPath": "../dist",
+    "distDir": "../dist",
     "withGlobalTauri": true
   },
   "package": {
@@ -36,7 +36,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "replace-me",
+      "identifier": "replace-me.with-unique-identifier.in-reverse-domain-notation",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

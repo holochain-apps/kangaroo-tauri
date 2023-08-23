@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Change Profile</title>
+    <script type="module" src="./profiles.js" defer></script>
+    <style>
+      :root{
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        color: rgb(231,231,231);
+        background: rgb(45,45,45);
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .row {
+        display: flex;
+        flex-direction: row;
+      }
+      .column {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Change Profile</h1>
+
+      <div>current profile: <span id="current-profile" style="color: black;">loading...</span></div>
+
+      <div style="margin-top: 30px; font-weight: bold;">Select Existing Profile:</div>
+
+      <div class="row" style="margin-top: 10px;">
+        <select id="profile-selector">
+        </select>
+        <button id="restart-button" style="margin-left: 10px;">Restart</button>
+      </div>
+
+      <div style="margin-top: 40px; font-weight: bold;">Create New Profile:</div>
+
+      <div class="row" style="margin-top: 10px;">
+        <form id="create-and-restart-form">
+          <input
+            id="new-profile-input"
+            type="text"
+            placeholder="New profile name..."
+            pattern="[0-9a-zA-Z_]*"
+            title="Profile name can only contain digits (0-9), letters (a-z) or underscores"
+          >
+          <button id="create-and-restart-button" style="margin-left: 10px;">Create and Restart</button>
+        </form>
+      </div>
+
+    </div>
+  </body>
+</html>

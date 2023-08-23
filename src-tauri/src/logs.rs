@@ -11,7 +11,7 @@ use crate::{filesystem::AppFileSystem, APP_ID};
 use crate::APP_NAME;
 
 pub fn setup_logs(fs: AppFileSystem) -> Result<(), String> {
-	let logs_path = fs.app_log_dir.join(format!("{}.log", APP_ID));
+	let logs_path = fs.profile_log_dir.join(format!("{}.log", APP_ID));
 
 	let logfile = FileAppender::builder()
 		.encoder(Box::new(PatternEncoder::new("[{d}] {l} - {m}\n")))
@@ -39,7 +39,7 @@ pub fn log(log: String) -> Result<(), String> {
 /// Opens the folder where the logs are stored for the given profile
 pub fn open_logs_folder(fs: AppFileSystem) -> () {
 
-	let logs_dir = fs.app_log_dir;
+	let logs_dir = fs.profile_log_dir;
 
 	if let Err(err) = opener::open(logs_dir) {
 		log::error!("Error opening logs folder: {}", err);
