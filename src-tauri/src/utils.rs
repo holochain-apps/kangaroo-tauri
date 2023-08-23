@@ -1,4 +1,6 @@
 
+use std::path::PathBuf;
+
 use holochain::{conductor::ConductorHandle, prelude::kitsune_p2p::dependencies::kitsune_p2p_types::dependencies::lair_keystore_api::prelude::BinDataSized};
 use holochain_types::prelude::ZomeCallUnsigned;
 use holochain_zome_types::{Signature, CellId, ZomeName, FunctionName, CapSecret, ExternIO, Timestamp};
@@ -151,3 +153,83 @@ pub const ZOOM_ON_SCROLL: &str = r#"
 	}
 "#;
 
+
+
+///On Unix systems, there is a limit to the path length of a domain socket. This function creates a symlink to
+/// the lair directory from the tempdir instead and overwrites the connectionUrl in the lair-keystore-config.yaml
+pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf, ) -> Result<(), String> {
+
+        let mut keystore_dir = keystore_data_dir.clone();
+
+        let uid = nanoid::nanoid!(13);
+        let src_path = std::env::temp_dir().join(format!("lair.{}", uid));
+        symlink::symlink_dir(keystore_dir, src_path.clone())
+          .map_err(|e| format!("Failed to create symlink directory for lair keystore: {}", e))?;
+        keystore_dir = src_path;
+
+        // overwrite connectionUrl in lair-keystore-config.yaml to symlink directory
+        // 1. read to string
+        let mut lair_config_string = std::fs::read_to_string(keystore_dir.join("lair-keystore-config.yaml"))
+            .map_err(|e| format!("Failed to read lair-keystore-config.yaml: {}", e))?;
+
+        // 2. filter out the line with the connectionUrl
+        let connection_url_line = lair_config_string.lines().filter(|line| line.contains("connectionUrl:")).collect::<String>();
+
+        // 3. replace the part unix:///home/[user]/.local/share/holochain-launcher/profiles/default/lair/0.2/socket?k=[some_key]
+        //    with unix://[path to tempdir]/socket?k=[some_key]
+        let split_byte_index = connection_url_line.rfind("socket?").unwrap();
+        let socket = &connection_url_line.as_str()[split_byte_index..];
+        let tempdir_connection_url = match url::Url::parse(&format!(
+          "unix://{}",
+          keystore_dir.join(socket).to_str().unwrap(),
+        )) {
+          Ok(url) => url,
+          Err(e) => return Err(format!("Failed to parse URL for symlink lair path: {}", e)),
+        };
+
+        let new_line = &format!("connectionUrl: {}\n", tempdir_connection_url);
+
+        // 4. Replace the existing connectionUrl line with that new line
+        lair_config_string = LinesWithEndings::from(lair_config_string.as_str()).map(|line| {
+          if line.contains("connectionUrl:") {
+            new_line
+          } else {
+            line
+          }
+        }).collect::<String>();
+
+        // 5. Overwrite the lair-keystore-config.yaml with the modified content
+        std::fs::write(keystore_dir.join("lair-keystore-config.yaml"), lair_config_string)
+          .map_err(|e| format!("Failed to write lair-keystore-config.yaml after modification: {}", e))
+}
+
+
+
+/// Iterator yielding every line in a string. The line includes newline character(s).
+/// https://stackoverflow.com/questions/40455997/iterate-over-lines-in-a-string-including-the-newline-characters
+pub struct LinesWithEndings<'a> {
+    input: &'a str,
+  }
+
+  impl<'a> LinesWithEndings<'a> {
+    pub fn from(input: &'a str) -> LinesWithEndings<'a> {
+        LinesWithEndings {
+            input: input,
+        }
+    }
+  }
+
+  impl<'a> Iterator for LinesWithEndings<'a> {
+    type Item = &'a str;
+
+    #[inline]
+    fn next(&mut self) -> Option<&'a str> {
+        if self.input.is_empty() {
+            return None;
+        }
+        let split = self.input.find('\n').map(|i| i + 1).unwrap_or(self.input.len());
+        let (line, rest) = self.input.split_at(split);
+        self.input = rest;
+        Some(line)
+    }
+  }

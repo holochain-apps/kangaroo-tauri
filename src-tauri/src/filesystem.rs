@@ -80,11 +80,11 @@ impl AppFileSystem {
         })
   }
 
-  pub fn keystore_path(&self) -> PathBuf {
+  pub fn keystore_dir(&self) -> PathBuf {
       self.profile_data_dir.join("keystore")
   }
 
-  pub fn conductor_path(&self) -> PathBuf {
+  pub fn conductor_dir(&self) -> PathBuf {
       self.profile_data_dir.join("conductor")
   }
 

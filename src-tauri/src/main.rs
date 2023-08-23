@@ -21,7 +21,7 @@ use serde_json::Value;
 use system_tray::{handle_system_tray_event, app_system_tray};
 use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window, App};
 
-use utils::{sign_zome_call, ZOOM_ON_SCROLL};
+use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
 use commands::{profile::{get_existing_profiles, set_active_profile, get_active_profile, open_profile_settings}, restart::restart};
 
 
@@ -109,6 +109,9 @@ fn main() {
             app.manage(fs.clone());
 
 
+            #[cfg(target_family="unix")]
+            create_and_apply_lair_symlink(fs.keystore_dir())?;
+
 
             tauri::async_runtime::block_on(async move {
                 let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
@@ -165,9 +168,9 @@ pub async fn launch(
     password: String,
 ) -> AppResult<(ConductorHandle, u16, u16)> {
     let mut config = ConductorConfig::default();
-    config.environment_path = fs.conductor_path().into();
+    config.environment_path = fs.conductor_dir().into();
     config.keystore = KeystoreConfig::LairServerInProc {
-        lair_root: Some(fs.keystore_path()),
+        lair_root: Some(fs.keystore_dir()),
     };
 
     let admin_port = portpicker::pick_unused_port().expect("Cannot find any unused port");
