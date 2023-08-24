@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc, path::PathBuf};
 
 use crate::errors::{AppError, AppResult};
 use filesystem::{AppFileSystem, Profile};
@@ -9,7 +9,7 @@ use futures::lock::Mutex;
 use holochain::{conductor::{
     config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
     interface::InterfaceDriver,
-    Conductor, ConductorHandle,
+    Conductor, ConductorHandle, ConductorBuilder,
 }, prelude::{KitsuneP2pConfig, TransportConfig}};
 use holochain_types::prelude::AppBundle;
 
@@ -99,7 +99,7 @@ fn main() {
             };
 
             // start conductor and lair
-            let fs = AppFileSystem::new(&handle, &profile)?;
+            let fs = AppFileSystem::new(&handle, &profile).unwrap();
 
             // set up logs
             if let Err(err) = setup_logs(fs.clone()) {
@@ -107,11 +107,6 @@ fn main() {
             }
 
             app.manage(fs.clone());
-
-
-            #[cfg(target_family="unix")]
-            create_and_apply_lair_symlink(fs.keystore_dir())?;
-
 
             tauri::async_runtime::block_on(async move {
                 let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
@@ -189,18 +184,24 @@ pub async fn launch(
 
     config.network = Some(network_config);
 
+    // will fail if lair has not ever been set up yet.
+    #[cfg(target_family="unix")]
+    let _symlink_succeeded = match create_and_apply_lair_symlink(fs.keystore_dir()) {
+        Ok(()) => true,
+        Err(_e) => false,
+    };
+
     // TODO: set the DHT arc depending on whether this is mobile (tauri 2.0)
-    let conductor = Conductor::builder()
-        .config(config)
-        .passphrase(
-            Some(
-                utils::vec_to_locked(password.into_bytes())
-                    .map_err(|e| AppError::IoError(e))?
-            )
+    let conductor_builder = Conductor::builder()
+    .config(config.clone())
+    .passphrase(
+        Some(
+            utils::vec_to_locked(password.clone().into_bytes())
+                .map_err(|e| AppError::IoError(e))?
         )
-        .build()
-        .await
-        .map_err(|e| AppError::ConductorError(e))?;
+    );
+
+    let conductor = try_build_conductor(conductor_builder, fs.keystore_dir(), config, password).await?;
 
     let mut admin_ws = utils::get_admin_ws(admin_port).await?;
     let app_port = conductor
@@ -289,5 +290,25 @@ pub async fn install_app_if_necessary(
 }
 
 
-
+async fn try_build_conductor(conductor_builder: ConductorBuilder, keystore_data_dir: PathBuf, config: ConductorConfig, password: String) -> AppResult<Arc<Conductor>> {
+    match conductor_builder.build().await {
+        Ok(conductor) => Ok(conductor),
+        Err(e) => {
+            if cfg!(target_family="unix") && e.to_string().contains("path must be shorter than libc::sockaddr_un.sun_path") {
+                create_and_apply_lair_symlink(keystore_data_dir)?;
+                return Conductor::builder()
+                    .config(config)
+                    .passphrase(
+                        Some(
+                            utils::vec_to_locked(password.into_bytes())
+                                .map_err(|e| AppError::IoError(e))?
+                        )
+                    ).build()
+                    .await
+                    .map_err(|e| AppError::ConductorError(e))
+            }
+            Err(AppError::ConductorError(e))
+        }
+    }
+}
 

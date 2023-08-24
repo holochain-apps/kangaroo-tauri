@@ -48,6 +48,9 @@ pub enum AppError {
 
     #[error("Error signing zome call: `{0}`")]
     SignZomeCallError(String),
+
+    #[error("Error creating a symlink of the lair directory: `{0}`")]
+    LairSymLinkError(String),
 }
 
 
