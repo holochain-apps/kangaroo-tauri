@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{collections::HashMap, sync::Arc, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use crate::errors::{AppError, AppResult};
 use filesystem::{AppFileSystem, Profile};
@@ -10,7 +10,7 @@ use holochain::{conductor::{
     config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
     interface::InterfaceDriver,
     Conductor, ConductorHandle, ConductorBuilder,
-}, prelude::{KitsuneP2pConfig, TransportConfig}};
+}, prelude::{KitsuneP2pConfig, ProxyConfig, TransportConfig, kitsune_p2p::dependencies::kitsune_p2p_types::config::KitsuneP2pTuningParams}};
 use holochain_types::prelude::AppBundle;
 
 use holochain_client::{AdminWebsocket, InstallAppPayload};
@@ -25,16 +25,14 @@ use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
 use commands::{profile::{get_existing_profiles, set_active_profile, get_active_profile, open_profile_settings}, restart::restart};
 
 
-const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
-const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
-pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
+const APP_NAME: &str = "hc-stress-test"; // name of the app. Can be changed without breaking your app.
+const APP_ID: &str = "hc-stress-test"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
+pub const WINDOW_TITLE: &str = "hc-stress-test"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
 const NETWORK_SEED: Option<String> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
                                             // read it secretly from an environment variable. If so, replace `None` with `Some(String::from([your network seed here]))`
-const SIGNALING_SERVER: &str = "wss://signal.holo.host"; // replace-me (optional): Change the signaling server if you want
-
 
 mod errors;
 mod filesystem;
@@ -43,7 +41,6 @@ mod logs;
 mod system_tray;
 mod utils;
 mod commands;
-
 
 
 fn main() {
@@ -177,9 +174,18 @@ pub async fn launch(
     }]);
 
     let mut network_config = KitsuneP2pConfig::default();
+
     network_config.bootstrap_service = Some(url2::url2!("https://bootstrap.holo.host")); // replace-me (optional) -- change bootstrap server URL here if desired
-    network_config.transport_pool.push(TransportConfig::WebRTC {
-        signal_url: SIGNALING_SERVER.into(),
+    network_config.tuning_params = KitsuneP2pTuningParams::default();
+    network_config.transport_pool.push(TransportConfig::Proxy {
+      sub_transport: Box::new(TransportConfig::Quic {
+        bind_to: None,
+        override_host: None,
+        override_port: None,
+      }),
+      proxy_config: ProxyConfig::RemoteProxyClient {
+        proxy_url:  url2::url2!("kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/137.184.142.208/p/5788/--") // replace-me (optional) -- change proxy server URL here if desired
+      },
     });
 
     config.network = Some(network_config);
