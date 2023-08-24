@@ -1,12 +1,12 @@
 {
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run dist",
     "devPath": "../dist",
     "distDir": "../dist",
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "replace-me",
+    "productName": "hc-stress-test",
     "version": "0.0.0"
   },
   "tauri": {
@@ -21,7 +21,7 @@
       }
     },
     "cli": {
-      "description": "Running replace-me from the command line",
+      "description": "Running hc-stress-test from the command line",
       "args": [
         {
           "name": "profile",
@@ -36,7 +36,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "replace-me.with-unique-identifier.in-reverse-domain-notation",
+      "identifier": "org.hc-kangaroo.hc-stress-test",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

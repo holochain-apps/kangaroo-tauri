@@ -2689,6 +2689,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "hc-stress-test"
+version = "0.0.1"
+dependencies = [
+ "either",
+ "futures",
+ "holochain",
+ "holochain_client",
+ "holochain_types",
+ "holochain_zome_types",
+ "log",
+ "log4rs",
+ "mr_bundle",
+ "nanoid 0.4.0",
+ "opener",
+ "portpicker",
+ "semver 1.0.17",
+ "serde",
+ "serde_json",
+ "sodoken",
+ "symlink",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-single-instance",
+ "thiserror",
+ "url 2.4.0",
+ "url2",
+]
+
+[[package]]
 name = "hc_seed_bundle"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2924,35 +2953,6 @@ dependencies = [
  "url_serde",
  "uuid 0.7.4",
  "wasmer-middlewares",
-]
-
-[[package]]
-name = "holochain-kangaroo"
-version = "0.0.0"
-dependencies = [
- "either",
- "futures",
- "holochain",
- "holochain_client",
- "holochain_types",
- "holochain_zome_types",
- "log",
- "log4rs",
- "mr_bundle",
- "nanoid 0.4.0",
- "opener",
- "portpicker",
- "semver 1.0.17",
- "serde",
- "serde_json",
- "sodoken",
- "symlink",
- "tauri",
- "tauri-build",
- "tauri-plugin-single-instance",
- "thiserror",
- "url 2.4.0",
- "url2",
 ]
 
 [[package]]

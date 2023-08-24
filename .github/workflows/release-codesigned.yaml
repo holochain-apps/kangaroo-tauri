@@ -2,7 +2,7 @@ name: "publish"
 on:
   push:
     branches:
-      - release-codesigned
+      - release-codesigned-testing
 
 jobs:
   publish-tauri:
@@ -60,7 +60,7 @@ jobs:
         with:
           projectPath: src-tauri # specifying to prevent action from looking for artifacts in crates/hc_launch/src-tauri
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "replace-me v__VERSION__"
+          releaseName: "hc-stress-test v__VERSION__"
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
