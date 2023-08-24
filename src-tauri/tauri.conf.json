@@ -1,6 +1,6 @@
 {
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "npm run dist",
     "devPath": "../dist",
     "distDir": "../dist",
     "withGlobalTauri": true
