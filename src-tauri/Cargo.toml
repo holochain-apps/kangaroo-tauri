@@ -1,8 +1,8 @@
 [package]
-name = "holochain-kangaroo" # replace-me
-version = "0.0.0" # replace-me -- Choose wisely, see "Note on Versioning" in README
-description = "A Tauri App"
-authors = ["you"]
+name = "kando" # replace-me
+version = "0.0.1" # replace-me -- Choose wisely, see "Note on Versioning" in README
+description = "KanBan Boards in Holochain"
+authors = ["dev@holochain.org"]
 license = ""
 repository = ""
 edition = "2021"
