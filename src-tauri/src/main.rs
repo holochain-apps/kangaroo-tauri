@@ -278,6 +278,7 @@ pub async fn install_app_if_necessary(
                 network_seed: network_seed.clone(),
                 installed_app_id: Some(APP_ID.to_string()),
                 membrane_proofs: HashMap::new(),
+                ignore_genesis_failure: true,
             })
             .await
             .map_err(|e| AppError::ConductorApiError(e))?;
