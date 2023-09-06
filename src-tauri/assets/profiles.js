@@ -3,6 +3,7 @@ const { invoke } = window.__TAURI__.tauri;
 let selectProfileEl;
 let restartButtonEl;
 let newProfileInputEl;
+let newProfileSeedInputEl;
 let createAndRestartFormEl;
 let currentProfileSpanEl;
 
@@ -35,6 +36,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   })
 
   newProfileInputEl = document.querySelector("#new-profile-input");
+  newProfileSeedInputEl = document.querySelector("#new-profile-seed-input");
   createAndRestartFormEl = document.querySelector("#create-and-restart-form");
 
   newProfileInputEl.addEventListener("change", () => {
@@ -47,6 +49,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   createAndRestartFormEl.addEventListener('submit', async (e) => {
     e.preventDefault();
     await invoke("set_active_profile", { profile: newProfileInputEl.value });
+    await invoke("set_profile_network_seed", { profile: newProfileInputEl.value, networkSeed: newProfileSeedInputEl.value });
     await invoke("restart", {});
   })
 });
