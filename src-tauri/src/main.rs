@@ -22,7 +22,7 @@ use system_tray::{handle_system_tray_event, app_system_tray};
 use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window, App};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
-use commands::{profile::{get_existing_profiles, set_active_profile, get_active_profile, open_profile_settings}, restart::restart};
+use commands::{profile::{get_existing_profiles, set_active_profile, set_profile_network_seed, get_active_profile, open_profile_settings}, restart::restart};
 
 
 const APP_NAME: &str = "hc-stress-test"; // name of the app. Can be changed without breaking your app.
@@ -31,7 +31,7 @@ pub const WINDOW_TITLE: &str = "hc-stress-test"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
-const NETWORK_SEED: Option<String> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
+const DEFAULT_NETWORK_SEED: Option<String> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
                                             // read it secretly from an environment variable. If so, replace `None` with `Some(String::from([your network seed here]))`
 
 mod errors;
@@ -76,6 +76,7 @@ fn main() {
             set_active_profile,
             get_active_profile,
             get_existing_profiles,
+            set_profile_network_seed,
             open_profile_settings,
             restart,
         ])
@@ -216,7 +217,12 @@ pub async fn launch(
         .await
         .map_err(|e| AppError::ConductorError(e))?;
 
-    install_app_if_necessary(NETWORK_SEED, &mut admin_ws).await?;
+    let network_seed = match fs.read_profile_network_seed() {
+        Some(seed) => Some(seed),
+        None => DEFAULT_NETWORK_SEED,
+    };
+
+    install_app_if_necessary(network_seed, &mut admin_ws).await?;
 
     Ok((conductor, app_port, admin_port))
 }
