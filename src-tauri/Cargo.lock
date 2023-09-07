@@ -2931,35 +2931,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "holochain-kangaroo"
-version = "0.0.0"
-dependencies = [
- "either",
- "futures",
- "holochain",
- "holochain_client",
- "holochain_types",
- "holochain_zome_types",
- "log",
- "log4rs",
- "mr_bundle",
- "nanoid 0.4.0",
- "opener",
- "portpicker",
- "semver 1.0.17",
- "serde",
- "serde_json",
- "sodoken",
- "symlink",
- "tauri",
- "tauri-build",
- "tauri-plugin-single-instance",
- "thiserror",
- "url 2.4.0",
- "url2",
-]
-
-[[package]]
 name = "holochain_cascade"
 version = "0.2.2-beta-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3960,6 +3931,35 @@ dependencies = [
  "serde_json",
  "thiserror",
  "treediff",
+]
+
+[[package]]
+name = "kando"
+version = "0.0.2"
+dependencies = [
+ "either",
+ "futures",
+ "holochain",
+ "holochain_client",
+ "holochain_types",
+ "holochain_zome_types",
+ "log",
+ "log4rs",
+ "mr_bundle",
+ "nanoid 0.4.0",
+ "opener",
+ "portpicker",
+ "semver 1.0.17",
+ "serde",
+ "serde_json",
+ "sodoken",
+ "symlink",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-single-instance",
+ "thiserror",
+ "url 2.4.0",
+ "url2",
 ]
 
 [[package]]
