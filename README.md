@@ -4,7 +4,7 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.1.
+**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.2-beta-rc.1.
 # Instructions
 
 1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). If you are on Linux, follow [these](https://tauri.app/v1/guides/getting-started/prerequisites#1-system-dependencies) instructions to also install the required system dependencies for tauri.

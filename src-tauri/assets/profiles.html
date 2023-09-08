@@ -45,16 +45,23 @@
 
       <div style="margin-top: 40px; font-weight: bold;">Create New Profile:</div>
 
-      <div class="row" style="margin-top: 10px;">
+      <div class="column" style="margin-top: 10px;">
         <form id="create-and-restart-form">
-          <input
-            id="new-profile-input"
-            type="text"
-            placeholder="New profile name..."
-            pattern="[0-9a-zA-Z_]*"
-            title="Profile name can only contain digits (0-9), letters (a-z) or underscores"
-          >
-          <button id="create-and-restart-button" style="margin-left: 10px;">Create and Restart</button>
+          <div class="column">
+            <input
+              id="new-profile-input"
+              type="text"
+              placeholder="New profile name..."
+              pattern="[0-9a-zA-Z_]*"
+              title="Profile name can only contain digits (0-9), letters (a-z) or underscores"
+            >
+            <input
+              id="new-profile-seed-input"
+              type="text"
+              placeholder="Network Seed (optional)"
+            >
+            <button id="create-and-restart-button" style="margin-top: 10px;">Create and Restart</button>
+          </div>
         </form>
       </div>
 
