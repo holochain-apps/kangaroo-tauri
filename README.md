@@ -4,7 +4,7 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.2-beta-rc.1.
+**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.2-beta-rc.3.
 
 **Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
 
