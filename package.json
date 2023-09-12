@@ -1,7 +1,7 @@
 {
   "name": "hc-stress-test",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "kangaroo": "npm run dist && npm run tauri build",
