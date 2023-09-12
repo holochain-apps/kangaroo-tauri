@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc, path::PathBuf};
 
 use crate::errors::{AppError, AppResult};
 use filesystem::{AppFileSystem, Profile};
@@ -9,7 +9,7 @@ use futures::lock::Mutex;
 use holochain::{conductor::{
     config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
     interface::InterfaceDriver,
-    Conductor, ConductorHandle,
+    Conductor, ConductorHandle, ConductorBuilder,
 }, prelude::{KitsuneP2pConfig, TransportConfig}};
 use holochain_types::prelude::AppBundle;
 
@@ -22,7 +22,7 @@ use system_tray::{handle_system_tray_event, app_system_tray};
 use tauri::{Manager, WindowBuilder, RunEvent, SystemTray, SystemTrayEvent, AppHandle, Window, App};
 
 use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
-use commands::{profile::{get_existing_profiles, set_active_profile, get_active_profile, open_profile_settings}, restart::restart};
+use commands::{profile::{get_existing_profiles, set_active_profile, set_profile_network_seed, get_active_profile, open_profile_settings}, restart::restart};
 
 
 const APP_NAME: &str = "hc-stress-test"; // name of the app. Can be changed without breaking your app.
@@ -31,8 +31,8 @@ pub const WINDOW_TITLE: &str = "hc-stress-test"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
-const NETWORK_SEED: Option<String> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
-                                            // read it secretly from an environment variable. If so, replace `None` with `Some(String::from([your network seed here]))`
+pub const DEFAULT_NETWORK_SEED: Option<&str> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
+                                            // read it secretly from an environment variable. If so, replace `None` with `Some("your network seed here")`
 const SIGNALING_SERVER: &str = "wss://signal.holo.host"; // replace-me (optional): Change the signaling server if you want
 
 
@@ -79,6 +79,7 @@ fn main() {
             set_active_profile,
             get_active_profile,
             get_existing_profiles,
+            set_profile_network_seed,
             open_profile_settings,
             restart,
         ])
@@ -99,7 +100,7 @@ fn main() {
             };
 
             // start conductor and lair
-            let fs = AppFileSystem::new(&handle, &profile)?;
+            let fs = AppFileSystem::new(&handle, &profile).unwrap();
 
             // set up logs
             if let Err(err) = setup_logs(fs.clone()) {
@@ -107,11 +108,6 @@ fn main() {
             }
 
             app.manage(fs.clone());
-
-
-            #[cfg(target_family="unix")]
-            create_and_apply_lair_symlink(fs.keystore_dir())?;
-
 
             tauri::async_runtime::block_on(async move {
                 let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
@@ -152,6 +148,8 @@ pub fn build_main_window(fs: AppFileSystem, app_handle: &AppHandle, app_port: u1
       )
         // optional (OSmenu) -- Adds an OS menu to the app
         .menu(build_menu())
+        // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
+        .disable_file_drop_handler()
         .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
         .resizable(true)
         .title(WINDOW_TITLE)
@@ -189,18 +187,24 @@ pub async fn launch(
 
     config.network = Some(network_config);
 
+    // will fail if lair has not ever been set up yet.
+    #[cfg(target_family="unix")]
+    let _symlink_succeeded = match create_and_apply_lair_symlink(fs.keystore_dir()) {
+        Ok(()) => true,
+        Err(_e) => false,
+    };
+
     // TODO: set the DHT arc depending on whether this is mobile (tauri 2.0)
-    let conductor = Conductor::builder()
-        .config(config)
-        .passphrase(
-            Some(
-                utils::vec_to_locked(password.into_bytes())
-                    .map_err(|e| AppError::IoError(e))?
-            )
+    let conductor_builder = Conductor::builder()
+    .config(config.clone())
+    .passphrase(
+        Some(
+            utils::vec_to_locked(password.clone().into_bytes())
+                .map_err(|e| AppError::IoError(e))?
         )
-        .build()
-        .await
-        .map_err(|e| AppError::ConductorError(e))?;
+    );
+
+    let conductor = try_build_conductor(conductor_builder, fs.keystore_dir(), config, password).await?;
 
     let mut admin_ws = utils::get_admin_ws(admin_port).await?;
     let app_port = conductor
@@ -209,7 +213,12 @@ pub async fn launch(
         .await
         .map_err(|e| AppError::ConductorError(e))?;
 
-    install_app_if_necessary(NETWORK_SEED, &mut admin_ws).await?;
+    let network_seed = match fs.read_profile_network_seed() {
+        Some(seed) => Some(seed),
+        None => DEFAULT_NETWORK_SEED.map(|s| s.to_string()),
+    };
+
+    install_app_if_necessary(network_seed, &mut admin_ws).await?;
 
     Ok((conductor, app_port, admin_port))
 }
@@ -289,5 +298,25 @@ pub async fn install_app_if_necessary(
 }
 
 
-
+async fn try_build_conductor(conductor_builder: ConductorBuilder, keystore_data_dir: PathBuf, config: ConductorConfig, password: String) -> AppResult<Arc<Conductor>> {
+    match conductor_builder.build().await {
+        Ok(conductor) => Ok(conductor),
+        Err(e) => {
+            if cfg!(target_family="unix") && e.to_string().contains("path must be shorter than libc::sockaddr_un.sun_path") {
+                create_and_apply_lair_symlink(keystore_data_dir)?;
+                return Conductor::builder()
+                    .config(config)
+                    .passphrase(
+                        Some(
+                            utils::vec_to_locked(password.into_bytes())
+                                .map_err(|e| AppError::IoError(e))?
+                        )
+                    ).build()
+                    .await
+                    .map_err(|e| AppError::ConductorError(e))
+            }
+            Err(AppError::ConductorError(e))
+        }
+    }
+}
 
