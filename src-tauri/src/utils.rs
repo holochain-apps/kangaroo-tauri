@@ -1,56 +1,64 @@
 
 use std::path::PathBuf;
 
-use holochain::{conductor::ConductorHandle, prelude::kitsune_p2p::dependencies::kitsune_p2p_types::dependencies::lair_keystore_api::prelude::BinDataSized};
+use holochain_keystore::MetaLairClient;
 use holochain_types::prelude::ZomeCallUnsigned;
-use holochain_zome_types::{Signature, CellId, ZomeName, FunctionName, CapSecret, ExternIO, Timestamp};
+use holochain_zome_types::{CellId, ZomeName, FunctionName, CapSecret, ExternIO, Timestamp};
 
 use holochain_client::{AdminWebsocket, ZomeCall, AgentPubKey};
 
 
 use serde::Deserialize;
 
-use crate::errors::{AppResult, AppError};
+use crate::errors::{AppResult, AppError, LairKeystoreError};
 
 
 #[tauri::command]
 pub async fn sign_zome_call(
-    conductor: tauri::State<'_, futures::lock::Mutex<ConductorHandle>>,
+    meta_lair_client: tauri::State<'_, futures::lock::Mutex<MetaLairClient>>,
     zome_call_unsigned: ZomeCallUnsignedTauri,
 ) -> Result<ZomeCall, String> {
     let zome_call_unsigned_converted: ZomeCallUnsigned = zome_call_unsigned.into();
 
-    let conductor = conductor.lock().await;
-    let lair_client = conductor.keystore().lair_client();
+    let keystore = meta_lair_client.lock().await;
 
-    let pub_key = zome_call_unsigned_converted.provenance.clone();
-    let mut pub_key_2 = [0; 32];
-    pub_key_2.copy_from_slice(pub_key.get_raw_32());
+    let signed_zome_call = ZomeCall::try_from_unsigned_zome_call(
+        &keystore,
+        zome_call_unsigned_converted
+        ).await
+        .map_err(|e| format!("Failed to sign zome call: {}", e))?;
 
-    let data_to_sign = zome_call_unsigned_converted.data_to_sign().unwrap();
-        // .map_err(|e| format!("Failed to get data to sign from unsigned zome call: {}", e))
-        // .map_err(|e| AppError::SignZomeCallError(e))?;
+    // let conductor = conductor.lock().await;
+    // let lair_client = conductor.keystore().lair_client();
 
-    let sig = lair_client.sign_by_pub_key(
-        BinDataSized::from(pub_key_2),
-        None,
-        data_to_sign,
-    ).await.unwrap();
-        // .map_err(|e| AppError::SignZomeCallError(e.to_string()))?;
+    // let pub_key = zome_call_unsigned_converted.provenance.clone();
+    // let mut pub_key_2 = [0; 32];
+    // pub_key_2.copy_from_slice(pub_key.get_raw_32());
 
-    let signature = Signature(*sig.0);
+    // let data_to_sign = zome_call_unsigned_converted.data_to_sign().unwrap();
+    //     // .map_err(|e| format!("Failed to get data to sign from unsigned zome call: {}", e))
+    //     // .map_err(|e| AppError::SignZomeCallError(e))?;
 
-    let signed_zome_call = ZomeCall {
-        cell_id: zome_call_unsigned_converted.cell_id,
-        zome_name: zome_call_unsigned_converted.zome_name,
-        fn_name: zome_call_unsigned_converted.fn_name,
-        payload: zome_call_unsigned_converted.payload,
-        cap_secret: zome_call_unsigned_converted.cap_secret,
-        provenance: zome_call_unsigned_converted.provenance,
-        nonce: zome_call_unsigned_converted.nonce,
-        expires_at: zome_call_unsigned_converted.expires_at,
-        signature
-    };
+    // let sig = lair_client.sign_by_pub_key(
+    //     BinDataSized::from(pub_key_2),
+    //     None,
+    //     data_to_sign,
+    // ).await.unwrap();
+    //     // .map_err(|e| AppError::SignZomeCallError(e.to_string()))?;
+
+    // let signature = Signature(*sig.0);
+
+    // let signed_zome_call = ZomeCall {
+    //     cell_id: zome_call_unsigned_converted.cell_id,
+    //     zome_name: zome_call_unsigned_converted.zome_name,
+    //     fn_name: zome_call_unsigned_converted.fn_name,
+    //     payload: zome_call_unsigned_converted.payload,
+    //     cap_secret: zome_call_unsigned_converted.cap_secret,
+    //     provenance: zome_call_unsigned_converted.provenance,
+    //     nonce: zome_call_unsigned_converted.nonce,
+    //     expires_at: zome_call_unsigned_converted.expires_at,
+    //     signature
+    // };
 
     Ok(signed_zome_call)
 }
@@ -163,13 +171,15 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf, ) -> AppResult<
     let uid = nanoid::nanoid!(13);
     let src_path = std::env::temp_dir().join(format!("lair.{}", uid));
     symlink::symlink_dir(keystore_dir, src_path.clone())
-        .map_err(|e| AppError::LairSymLinkError(format!("Failed to create symlink directory for lair keystore: {}", e)))?;
+        .map_err(|e| AppError::LairKeystoreError(
+            LairKeystoreError::ErrorCreatingSymLink(format!("Failed to create symlink directory for lair keystore: {}", e))
+        ))?;
     keystore_dir = src_path;
 
     // overwrite connectionUrl in lair-keystore-config.yaml to symlink directory
     // 1. read to string
     let mut lair_config_string = std::fs::read_to_string(keystore_dir.join("lair-keystore-config.yaml"))
-        .map_err(|e| AppError::LairSymLinkError(format!("Failed to read lair-keystore-config.yaml: {}", e)))?;
+        .map_err(|e| LairKeystoreError::ErrorCreatingSymLink((format!("Failed to read lair-keystore-config.yaml: {}", e))))?;
 
     // 2. filter out the line with the connectionUrl
     let connection_url_line = lair_config_string.lines().filter(|line| line.contains("connectionUrl:")).collect::<String>();
@@ -183,7 +193,9 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf, ) -> AppResult<
             keystore_dir.join(socket).to_str().unwrap(),
         )) {
             Ok(url) => url,
-            Err(e) => return Err(AppError::LairSymLinkError(format!("Failed to parse URL for symlink lair path: {}", e))),
+            Err(e) => return Err(AppError::LairKeystoreError(
+                LairKeystoreError::ErrorCreatingSymLink((format!("Failed to parse URL for symlink lair path: {}", e))))
+            ),
     };
 
     let new_line = &format!("connectionUrl: {}\n", tempdir_connection_url);
@@ -199,7 +211,9 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf, ) -> AppResult<
 
     // 5. Overwrite the lair-keystore-config.yaml with the modified content
     std::fs::write(keystore_dir.join("lair-keystore-config.yaml"), lair_config_string)
-        .map_err(|e| AppError::LairSymLinkError(format!("Failed to write lair-keystore-config.yaml after modification: {}", e)))
+        .map_err(|e| AppError::LairKeystoreError(
+            LairKeystoreError::ErrorCreatingSymLink((format!("Failed to write lair-keystore-config.yaml after modification: {}", e)))
+        ))
 }
 
 

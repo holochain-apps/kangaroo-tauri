@@ -2936,6 +2936,7 @@ dependencies = [
  "futures",
  "holochain",
  "holochain_client",
+ "holochain_keystore",
  "holochain_types",
  "holochain_zome_types",
  "log",
@@ -2947,6 +2948,7 @@ dependencies = [
  "semver 1.0.17",
  "serde",
  "serde_json",
+ "serde_yaml 0.8.26",
  "sodoken",
  "symlink",
  "tauri",
@@ -5356,6 +5358,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "os_pipe"
+version = "1.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ae859aa07428ca9a929b936690f8b12dc5f11dd8c6992a18ca93919f28bc177"
+dependencies = [
+ "libc",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "os_str_bytes"
 version = "6.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7208,6 +7220,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "shared_child"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0d94659ad3c2137fef23ae75b03d5241d633f8acded53d672decfa0e6e0caef"
+dependencies = [
+ "libc",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "shrinkwraprs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7788,6 +7810,7 @@ dependencies = [
  "objc",
  "once_cell",
  "open",
+ "os_pipe",
  "percent-encoding 2.3.0",
  "rand 0.8.5",
  "raw-window-handle",
@@ -7798,6 +7821,7 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "serialize-to-javascript",
+ "shared_child",
  "state",
  "tar",
  "tauri-macros",

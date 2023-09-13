@@ -11,6 +11,7 @@ lerna-debug.log*
 
 node_modules
 dist/*
+src-tauri/bins
 dist-ssr
 *.local
 

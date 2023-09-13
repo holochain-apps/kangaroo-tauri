@@ -43,6 +43,10 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
+      ],
+      "externalBin": [
+        "bins/holochain-v0.2.2-beta-rc.3",
+        "bins/lair-keystore-v0.3.0"
       ]
     },
     "security": {
