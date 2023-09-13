@@ -1,4 +1,6 @@
-# Holochain Kangaroo
+# [SIDECAR-BINARY BRANCH] Holochain Kangaroo
+
+**This branch runs holochain and lair keystore as sidecar binaries**
 
 Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
@@ -17,15 +19,17 @@ This repository let's you easily convert your Holochain app into a standalone ta
 
 3. After cloning the newly created repository, run `npm install` to install the relevant tauri dependencies.
 
-4. Add your `[your-project].happ` file and your `ui.zip` file to the `./pouch` folder
+4. Compile the holochain and lair-keystore binaries if you intend to build the binary locally on your machine. Follow [this](compile-binaries.md) guide.
 
-5. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
+5. Add your `[your-project].happ` file and your `ui.zip` file to the `./pouch` folder
 
-6. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
+6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
 
-7. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
+7. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
 
-8. Build the app locally by running `npm run kangaroo`
+8. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
+
+9. Build the app locally by running `npm run kangaroo`
 
 ## Publish cross-platform Binaries
 
