@@ -116,9 +116,9 @@ fn main() {
             app.manage(fs.clone());
 
             tauri::async_runtime::block_on(async move {
-                let (conductor, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
+                let (meta_lair_client, app_port, admin_port) = launch(&fs, PASSWORD.to_string()).await.unwrap();
 
-                app.manage(Mutex::new(conductor));
+                app.manage(Mutex::new(meta_lair_client));
                 app.manage((app_port, admin_port));
 
                 let _app_window: Window = build_main_window(fs, &app.app_handle(), app_port, admin_port);
