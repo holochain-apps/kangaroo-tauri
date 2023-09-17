@@ -63,42 +63,42 @@ pub type AppResult<T> = Result<T, AppError>;
 
 #[derive(Error, Serialize, Deserialize, Debug, Clone)]
 pub enum LaunchHolochainError {
-  #[error("Failed to launch child: `{0}`")]
-  LaunchChildError(#[from] LaunchChildError),
+    #[error("Failed to launch child: `{0}`")]
+    LaunchChildError(#[from] LaunchChildError),
 
-  #[error("Failed to write the password: `{0}`")]
-  ErrorWritingPassword(String),
+    #[error("Failed to write the password: `{0}`")]
+    ErrorWritingPassword(String),
 
-  #[error("Error with the filesystem: `{0}`")]
-  IoError(String),
+    #[error("Error with the filesystem: `{0}`")]
+    IoError(String),
 
-  #[error("Could not connect to the conductor: `{0}`")]
-  CouldNotConnectToConductor(String),
+    #[error("Could not connect to the conductor: `{0}`")]
+    CouldNotConnectToConductor(String),
 
-  #[error("Could not initialize conductor: `{0}`")]
-  CouldNotInitializeConductor(#[from] InitializeConductorError),
+    #[error("Could not initialize conductor: `{0}`")]
+    CouldNotInitializeConductor(#[from] InitializeConductorError),
 
-  #[error("Failed to overwrite config: `{0}`")]
-  FailedToOverwriteConfig(String),
+    #[error("Failed to overwrite config: `{0}`")]
+    FailedToOverwriteConfig(String),
 
-  #[error("Failed to create sidecar binary command: `{0}`")]
-  SidecarBinaryCommandError(String),
+    #[error("Failed to create sidecar binary command: `{0}`")]
+    SidecarBinaryCommandError(String),
 
-  #[error("Impossible error: `{0}`")]
-  ImpossibleError(String),
+    #[error("Impossible error: `{0}`")]
+    ImpossibleError(String),
 }
 
 
 #[derive(Error, Serialize, Deserialize, Debug, Clone)]
 pub enum InitializeConductorError {
-  #[error("Unknown Error: `{0}`")]
-  UnknownError(String),
+    #[error("Unknown Error: `{0}`")]
+    UnknownError(String),
 
-  #[error("Could not connect to the database of the conductor: `{0}`")]
-  SqliteError(String),
+    #[error("Could not connect to the database of the conductor: `{0}`")]
+    SqliteError(String),
 
-  #[error("Address already in use: `{0}`")]
-  AddressAlreadyInUse(String),
+    #[error("Address already in use: `{0}`")]
+    AddressAlreadyInUse(String),
 }
 
 
