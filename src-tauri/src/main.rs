@@ -226,7 +226,7 @@ pub async fn launch(
         .expect("Could not write conductor config");
 
     // NEW_VERSION change holochain version number here if necessary
-    let command = Command::new_sidecar("holochain-v0.2.2-beta-rc.3")
+    let command = Command::new_sidecar("holochain-v0.2.2")
         .map_err(|err| AppError::LaunchHolochainError(
             LaunchHolochainError::SidecarBinaryCommandError(format!("{}", err)))
         )?;
