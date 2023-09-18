@@ -31,8 +31,8 @@ pub const WINDOW_TITLE: &str = "hc-stress-test"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
-const DEFAULT_NETWORK_SEED: Option<String> = None;  // replace-me (optional): Depending on your application, you may want to put a network seed here or
-                                            // read it secretly from an environment variable. If so, replace `None` with `Some(String::from([your network seed here]))`
+pub const DEFAULT_NETWORK_SEED: Option<&str> = None;    // replace-me (optional): Depending on your application, you may want to put a network seed here or
+                                                        // read it secretly from an environment variable. If so, replace `None` with `Some("your network seed here")`
 
 mod errors;
 mod filesystem;
@@ -145,6 +145,8 @@ pub fn build_main_window(fs: AppFileSystem, app_handle: &AppHandle, app_port: u1
       )
         // optional (OSmenu) -- Adds an OS menu to the app
         .menu(build_menu())
+        // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
+        .disable_file_drop_handler()
         .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
         .resizable(true)
         .title(WINDOW_TITLE)
@@ -219,7 +221,7 @@ pub async fn launch(
 
     let network_seed = match fs.read_profile_network_seed() {
         Some(seed) => Some(seed),
-        None => DEFAULT_NETWORK_SEED,
+        None => DEFAULT_NETWORK_SEED.map(|s| s.to_string()),
     };
 
     install_app_if_necessary(network_seed, &mut admin_ws).await?;

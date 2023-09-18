@@ -1,10 +1,13 @@
-# Holochain Kangaroo - Holochain 0.1.5
+# Holochain Kangaroo - Holochain 0.1.6
 
 Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: This branch uses Holochain version 0.1.5.
+**Holochain Version**: This branch uses Holochain version 0.1.6.
+
+**Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
+
 # Instructions
 
 1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). If you are on Linux, follow [these](https://tauri.app/v1/guides/getting-started/prerequisites#1-system-dependencies) instructions to also install the required system dependencies for tauri.
@@ -71,14 +74,14 @@ is a breaking change due to one of the above mentioned scenarios**.
 
 ## Note on Versioning
 
-The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/), for which it considers the version specified in `src-tauri/tauri.conf.json`. This has implications on your choice of package versions you give to your app in `src-tauri/Cargo.toml`.
+The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/), for which it considers the app version specified in `src-tauri/tauri.conf.json`. This has implications on your choice of the version number.
 
 <pre>Example:
-Binaries built with Cargo.toml versions 0.0.2 and 0.0.3 will store their data in separate subfolder on the filesystem and will have independent Holochain conductors. From end-user perspective this is a breaking change and opening a 0.0.3 version of your app won't provide access to data stored with the 0.0.2 version of your app.
+Binaries built with app versions 0.0.2 and 0.0.3 will store their data in separate subfolder on the filesystem and will have independent Holochain conductors. From end-user perspective this is a breaking change and opening a 0.0.3 version of your app won't provide access to data stored with the 0.0.2 version of your app.
 
-Binaries built with Cargo.toml versions 0.3.2 and 0.3.4 will share the same subfolder `0.3.x` on the filesystem and will share the same Holochain conductor.
+Binaries built with app versions 0.3.2 and 0.3.4 will share the same subfolder `0.3.x` on the filesystem and will share the same Holochain conductor.
 
-Binaries built with Cargo.toml versions 2.0.5 and 2.3.4 will share the same subfolder `2.x.x` on the filesystem and will share the same Holochain conductor.
+Binaries built with app versions 2.0.5 and 2.3.4 will share the same subfolder `2.x.x` on the filesystem and will share the same Holochain conductor.
 
 Pre-releases are always stored in independent subfolders (0.1.0-alpha.1 is considered incompatible with 0.1.0-alpha.2)
 </pre>

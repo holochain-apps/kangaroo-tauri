@@ -29,7 +29,7 @@ pub fn build_menu() -> Menu {
 	// special menu for macOS
 	if cfg!(target_os = "macos") {
 	let app_menu_submenu = Submenu::new(
-		"replace-me", // This is the menu title on macOS. You may for example have it be the name of your app.
+		"Menu",
 		Menu::new()
 		.add_item(version)
 		.add_item(change_profile)
@@ -44,19 +44,19 @@ pub fn build_menu() -> Menu {
 	}
 
 	Menu::new()
-	.add_submenu(menu_submenu)
+	    .add_submenu(menu_submenu)
 }
 
 pub fn handle_menu_event(event_id: &str, window: &Window<Wry>) {
-  let app_handle = window.app_handle();
-  let fs = app_handle.state::<AppFileSystem>();
-  match event_id {
-		"version" => message(Some(&window), APP_NAME, format!("Version {}", app_handle.package_info().version.to_string().as_str())),
-    "change_profile" => open_profile_settings(app_handle).unwrap(),
-		"open_logs" => open_logs_folder(fs.inner().to_owned()),
-    "devtools" => window.open_devtools(),
-    "restart" => app_handle.restart(),
-    "quit" => app_handle.exit(0),
-    _ => {}
-  }
+    let app_handle = window.app_handle();
+    let fs = app_handle.state::<AppFileSystem>();
+    match event_id {
+        "version" => message(Some(&window), APP_NAME, format!("Version {}", app_handle.package_info().version.to_string().as_str())),
+        "change_profile" => open_profile_settings(app_handle).unwrap(),
+        "open_logs" => open_logs_folder(fs.inner().to_owned()),
+        "devtools" => window.open_devtools(),
+        "restart" => app_handle.restart(),
+        "quit" => app_handle.exit(0),
+        _ => {}
+    }
 }
