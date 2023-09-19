@@ -74,7 +74,8 @@ jobs:
         if: matrix.platform == 'windows-2019'
         run: |
 
-          npm run build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
+          npm run dist
+          npm run tauri -- build --verbose # building in verbose mode to get reasonable logging output in case of failure
 
           dotnet tool install --global AzureSignTool
 
