@@ -64,6 +64,7 @@ jobs:
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
+          args: --verbose
 
 
       ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
@@ -117,3 +118,4 @@ jobs:
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
+          args: --verbose
