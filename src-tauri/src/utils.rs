@@ -208,17 +208,17 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf, ) -> AppResult<
 /// https://stackoverflow.com/questions/40455997/iterate-over-lines-in-a-string-including-the-newline-characters
 pub struct LinesWithEndings<'a> {
     input: &'a str,
-  }
+}
 
-  impl<'a> LinesWithEndings<'a> {
+impl<'a> LinesWithEndings<'a> {
     pub fn from(input: &'a str) -> LinesWithEndings<'a> {
         LinesWithEndings {
             input: input,
         }
     }
-  }
+}
 
-  impl<'a> Iterator for LinesWithEndings<'a> {
+impl<'a> Iterator for LinesWithEndings<'a> {
     type Item = &'a str;
 
     #[inline]
@@ -231,4 +231,4 @@ pub struct LinesWithEndings<'a> {
         self.input = rest;
         Some(line)
     }
-  }
+}
