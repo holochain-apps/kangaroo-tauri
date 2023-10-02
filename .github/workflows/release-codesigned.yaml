@@ -44,7 +44,7 @@ jobs:
         run: npm run dist
 
       - name: build the app (macOS and Linux only)
-        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is not wanted
+        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is NOT wanted
         uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
 
       ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
       ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
-      ### HELP Remove everything below if Windows code signing is wanted.
+      ### HELP Remove everything below if Windows code signing is NOT wanted.
 
       - name: build and sign the app (Windows only)
         if: matrix.platform == 'windows-2019'
