@@ -2702,7 +2702,7 @@ dependencies = [
 
 [[package]]
 name = "hc-stress-test"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "either",
  "futures",
