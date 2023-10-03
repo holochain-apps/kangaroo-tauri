@@ -89,7 +89,7 @@ jobs:
           # sign the .msi file
           AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\msi\hc-stress-test_0.0.2_x64_en-US.msi"
           # sign the .exe file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\nsis\hc-stress-test_0.0.2_x64_setup.exe"
+          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\nsis\hc-stress-test_0.0.2_x64-setup.exe"
 
           # # Uncomment the lines below if you have the updater enabled
           # # =========================================================
@@ -104,7 +104,7 @@ jobs:
 
           # log hashes before and after code signing to verify that the uploaded assets are the right ones
           CertUtil -hashfile "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\msi\hc-stress-test_0.0.2_x64_en-US.msi" SHA256
-          CertUtil -hashfile "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\nsis\hc-stress-test_0.0.2_x64_setup.exe" SHA256
+          CertUtil -hashfile "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\nsis\hc-stress-test_0.0.2_x64-setup.exe" SHA256
 
           # # Uncomment the lines below if you have the updater enabled
           # CertUtil -hashfile "D:\a\holochain-kangaroo\holochain-kangaroo\src-tauri\target\release\bundle\msi\hc-stress-test_0.0.2_x64_en-US.msi.zip" SHA256
