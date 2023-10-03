@@ -116,7 +116,7 @@ jobs:
 
 
       - name: upload signed .msi, .exe, .msi.zip, .msi.zip.sig files to github release (Windows only)
-        uses: matthme/tauri-action-ev-signing@dist
+        uses: matthme/tauri-action-ev-signing@upload-only
         if: matrix.platform == 'windows-2019'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
