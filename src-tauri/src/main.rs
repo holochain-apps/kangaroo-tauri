@@ -180,6 +180,14 @@ pub async fn launch(
 
     let log_level = log::Level::Warn;
 
+    if !fs.keystore_dir().exists() {
+        std::fs::create_dir_all(fs.keystore_dir().clone())?;
+    }
+
+    if !fs.conductor_dir().exists() {
+        std::fs::create_dir_all(fs.conductor_dir().clone())?;
+    }
+
     // initialize lair keystore if necessary
     if !fs.keystore_initialized() {
         initialize_keystore(fs.keystore_dir(), password.clone()).await?;
