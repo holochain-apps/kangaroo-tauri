@@ -1,4 +1,4 @@
-# [SIDECAR-BINARY BRANCH] Holochain Kangaroo
+# Holochain Kangaroo
 
 **This branch runs holochain and lair keystore as sidecar binaries**
 
@@ -6,7 +6,7 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.2.
+**Holochain Version**: The Kangaroo currently comes with Holochain holochain-v0.2.3-beta-rc.1.
 
 **Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
 
