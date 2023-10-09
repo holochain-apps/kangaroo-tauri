@@ -16,7 +16,7 @@ cp $LAIR_PATH src-tauri/bins/lair-keystore-v0.3.0-[_ARCHITECTURE_]
 
 cargo install holochain --version 0.2.2 --locked --features sqlite-encrypted
 HOLOCHAIN_PATH=$(which holochain)
-cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v0.2.2-[_ARCHITECTURE_]
+cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v0.2.3-beta-rc.1-[_ARCHITECTURE_]
 
 ```
 
@@ -31,6 +31,6 @@ Copy-Item $LkPath -Destination src-tauri/bins/lair-keystore-v0.3.0-x86_64-pc-win
 
 cargo install holochain --version 0.2.2 --locked --features sqlite-encrypted
 $HcPath = Get-Command holochain | Select-Object -ExpandProperty Definition
-Copy-Item $HcPath -Destination src-tauri/bins/holochain-v0.2.2-x86_64-pc-windows-msvc.exe
+Copy-Item $HcPath -Destination src-tauri/bins/holochain-v0.2.3-beta-rc.1-x86_64-pc-windows-msvc.exe
 
 ```
