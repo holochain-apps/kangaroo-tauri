@@ -48,7 +48,6 @@ pub fn open_profile_settings(
         "change_profile",
         tauri::WindowUrl::App(std::path::PathBuf::from("kangaroo_assets").join("profiles.html"))
         ).title("Change Profile")
-        .menu(build_menu())
         .inner_size(580.0, 400.0)
         .center()
         .minimizable(false)
