@@ -163,7 +163,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "replacce-me v__VERSION__"
+          releaseName: "replace-me v__VERSION__"
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
