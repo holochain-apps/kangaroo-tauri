@@ -65,20 +65,6 @@ fn main() {
           _ => {}
         })
 
-        // optional (single-instance) -- Allows only a single instance of your app running. Useful in combination with the systray
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            let main_window = app.get_window("main");
-            if let Some(window) = main_window {
-                window.show().unwrap();
-                window.unminimize().unwrap();
-                window.set_focus().unwrap();
-            } else {
-                let fs = app.state::<AppFileSystem>().inner().to_owned();
-                let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
-                let _r = build_main_window(fs, app, app_port, admin_port);
-            }
-        }))
-
         .invoke_handler(tauri::generate_handler![
             sign_zome_call,
             log,
@@ -100,6 +86,22 @@ fn main() {
             let profile = match profile_from_cli {
                 Some(profile) => profile,
                 None => {
+                    // ========================================
+                    // optional (single-instance) -- Allows only a single instance of your app running. Useful in combination with the systray
+                    handle.plugin(tauri_plugin_single_instance::init(move |app, _argv, _cwd| {
+                        let main_window = app.get_window("main");
+                        if let Some(window) = main_window {
+                            window.show().unwrap();
+                            window.unminimize().unwrap();
+                            window.set_focus().unwrap();
+                        } else {
+                            let fs = app.state::<AppFileSystem>().inner().to_owned();
+                            let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
+                            let _r = build_main_window(fs, app, app_port, admin_port);
+                        }
+                    }))?;
+                    // ========================================
+
                     let fs_tmp = AppFileSystem::new(&handle, &String::from("default"))?;
                     fs_tmp.get_active_profile()
                 },

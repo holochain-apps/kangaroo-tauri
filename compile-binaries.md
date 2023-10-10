@@ -13,7 +13,6 @@ cargo install --version 0.3.0 lair_keystore
 LAIR_PATH=$(which lair-keystore)
 cp $LAIR_PATH src-tauri/bins/lair-keystore-v0.3.0-[_ARCHITECTURE_]
 
-
 cargo install holochain --version holochain-v0.2.3-beta-rc.1 --locked --features sqlite-encrypted
 HOLOCHAIN_PATH=$(which holochain)
 cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v0.2.3-beta-rc.1-[_ARCHITECTURE_]

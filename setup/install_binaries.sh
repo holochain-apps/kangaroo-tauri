@@ -34,7 +34,7 @@ if [ -f "src-tauri/bins/holochain-v${REQUIRED_HOLOCHAIN_VERSION}-$TARGET_TRIPLE"
         cargo install holochain --version $REQUIRED_HOLOCHAIN_VERSION --locked --features sqlite-encrypted
         echo "Copying holochain binary to src-tauri/bins folder."
         HOLOCHAIN_PATH=$(which holochain)
-        cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v${REQUIRED_HOLOCHAIN_VERSION}-$TARGET_TRIPLE     
+        cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v${REQUIRED_HOLOCHAIN_VERSION}-$TARGET_TRIPLE
 fi
 
 # check whether correct lair binary is already in the src-tauri/bins folder
@@ -47,7 +47,7 @@ if [ -f "src-tauri/bins/lair-keystore-v${REQUIRED_LAIR_VERSION}-${TARGET_TRIPLE}
         cargo install  lair_keystore --version $REQUIRED_LAIR_VERSION --locked
         echo "Copying lair-keystore binary to src-tauri/bins folder."
         LAIR_PATH=$(which lair-keystore)
-        cp $LAIR_PATH src-tauri/bins/lair-keystore-v${REQUIRED_LAIR_VERSION}-$TARGET_TRIPLE     
+        cp $LAIR_PATH src-tauri/bins/lair-keystore-v${REQUIRED_LAIR_VERSION}-$TARGET_TRIPLE
 fi
 
-echo "done.\n"
+echo "done."
