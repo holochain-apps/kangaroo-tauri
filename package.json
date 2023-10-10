@@ -6,7 +6,8 @@
   "scripts": {
     "kangaroo": "npm run dist && npm run tauri build",
     "dist": "rimraf ./dist && extract-zip ./pouch/ui.zip ./dist && cpy ./src-tauri/assets/ ./dist/kangaroo_assets --flat",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "prepare": "curl -L --output pouch/hc-stress-test.happ https://drive.switch.ch/index.php/s/ZT4dXxnW9dLMWdr/download && curl -L --output ./pouch/ui.zip https://drive.switch.ch/index.php/s/ufeiI1thysVTwn2/download"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.2",
