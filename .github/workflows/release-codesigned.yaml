@@ -2,7 +2,7 @@ name: "publish"
 on:
   push:
     branches:
-      - release-codesigned-tesing-sidecar
+      - release-codesigned-testing-sidecar
 
 jobs:
   publish-tauri:
