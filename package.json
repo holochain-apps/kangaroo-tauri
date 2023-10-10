@@ -9,7 +9,7 @@
     "tauri": "tauri"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.4.0",
+    "@tauri-apps/cli": "^1.5.2",
     "cpy-cli": "5.0.0",
     "extract-zip-relative-path": "2.0.4",
     "rimraf": "5.0.1"
