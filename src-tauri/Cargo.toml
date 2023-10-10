@@ -1,6 +1,6 @@
 [package]
-name = "holochain-kangaroo" # replace-me
-version = "0.0.0" # replace-me -- Choose wisely, see "Note on Versioning" in README
+name = "hc-stress-test" # replace-me
+version = "0.0.3" # replace-me -- Choose wisely, see "Note on Versioning" in README
 description = "A Tauri App"
 authors = ["you"]
 license = ""

@@ -29,9 +29,9 @@ use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
 use commands::{profile::{get_existing_profiles, set_active_profile, set_profile_network_seed, get_active_profile, open_profile_settings}, restart::restart};
 
 
-const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
-const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
-pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
+const APP_NAME: &str = "hc-stress-test"; // name of the app. Can be changed without breaking your app.
+const APP_ID: &str = "hc-stress-test"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
+pub const WINDOW_TITLE: &str = "hc-stress-test"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
