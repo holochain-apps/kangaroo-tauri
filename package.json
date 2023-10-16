@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "smoke-test": "npm install && npm run download:hc-stress-test && run dist && npm run tauri build",
+    "smoke-test": "npm install && npm run download:hc-stress-test && npm run dist && npm run tauri build",
     "dist": "rimraf ./dist && extract-zip ./pouch/ui.zip ./dist && cpy ./src-tauri/assets/ ./dist/kangaroo_assets --flat",
     "tauri": "tauri",
     "download:hc-stress-test": "curl -L --output pouch/hc-stress-test.happ https://s3.eu-central-2.wasabisys.com/holochain-launcher/hc-smoke-test/holochain-0.1/hc-stress-test.happ && curl -L --output ./pouch/ui.zip https://s3.eu-central-2.wasabisys.com/holochain-launcher/hc-smoke-test/holochain-0.1/dist.zip"
