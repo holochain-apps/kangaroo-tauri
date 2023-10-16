@@ -87,7 +87,7 @@ jobs:
         run: npm run dist
 
       - name: build the app (macOS and Linux only)
-        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is not wanted
+        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is NOT wanted
         uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,11 +107,12 @@ jobs:
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
+          args: --verbose
 
 
       ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
       ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
-      ### HELP Remove everything below if Windows code signing is wanted.
+      ### HELP Remove everything below if Windows code signing is NOT wanted.
 
       - name: build and sign the app (Windows only)
         if: matrix.platform == 'windows-2019'
@@ -150,6 +151,12 @@ jobs:
 
           # # =========================================================
 
+          # log hashes before and after code signing to verify that the uploaded assets are the right ones
+          CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi" SHA256
+          CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe" SHA256
+          # # Uncomment the lines below if you have the updater enabled
+          # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" SHA256
+          # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip.sig" SHA256
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -166,3 +173,4 @@ jobs:
           releaseBody: "See assets below to download and install this version."
           releaseDraft: true
           prerelease: true
+          args: --verbose
