@@ -1,7 +1,5 @@
 # Holochain Kangaroo
 
-**This branch runs holochain and lair keystore as sidecar binaries**
-
 Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
