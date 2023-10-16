@@ -20,7 +20,7 @@ pub fn setup_logs(fs: AppFileSystem) -> Result<(), String> {
 
 	let config = Config::builder()
 			.appender(Appender::builder().build("logfile", Box::new(logfile)))
-			.build(Root::builder().appender("logfile").build(LevelFilter::Warn))
+			.build(Root::builder().appender("logfile").build(LevelFilter::Info))
 			.map_err(|err| format!("Could not init log config: {:?}", err))?;
 
 	log4rs::init_config(config).map_err(|err| format!("Could not init log config: {:?}", err))?;

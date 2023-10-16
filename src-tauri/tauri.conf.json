@@ -44,6 +44,10 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
+      "externalBin": [
+        "bins/holochain-v0.2.3-beta-rc.1",
+        "bins/lair-keystore-v0.3.0"
+      ],
       "macOS": {
         "frameworks": [],
         "minimumSystemVersion": "",

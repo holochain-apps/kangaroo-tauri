@@ -1,31 +1,35 @@
 # Holochain Kangaroo
 
+**This branch runs holochain and lair keystore as sidecar binaries**
+
 Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain 0.2.2-beta-rc.3.
+**Holochain Version**: The Kangaroo currently comes with Holochain holochain-v0.2.3-beta-rc.1.
 
 **Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
 
 # Instructions
 
-1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). If you are on Linux, follow [these](https://tauri.app/v1/guides/getting-started/prerequisites#1-system-dependencies) instructions to also install the required system dependencies for tauri.
+1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). Then follow the [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) instructions for your platform.
 
 2. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it.<br>
-(Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**)
+Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**
 
 3. After cloning the newly created repository, run `npm install` to install the relevant tauri dependencies.
 
-4. Add your `[your-project].happ` file and your `ui.zip` file to the `./pouch` folder
+4. Compile the holochain and lair-keystore binaries if you intend to build your app locally. On macOS/Linux you can run `bash setup/install_binaries.sh` to do that automatically. On Windows, follow [this](compile-binaries.md) guide.
 
-5. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
+5. Add your `[your-project].happ` file and your `ui.zip` file to the `./pouch` folder
 
-6. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
+6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
 
-7. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
+7. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
 
-8. Build the app locally by running `npm run kangaroo`
+8. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
+
+9. Build the app locally by running `npm run kangaroo`
 
 ## Publish cross-platform Binaries
 
