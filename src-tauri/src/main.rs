@@ -25,9 +25,9 @@ use utils::{sign_zome_call, ZOOM_ON_SCROLL, create_and_apply_lair_symlink};
 use commands::{profile::{get_existing_profiles, set_active_profile, set_profile_network_seed, get_active_profile, open_profile_settings}, restart::restart};
 
 
-const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
-const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
-pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
+const APP_NAME: &str = "hc-smoke-test-beta-2"; // name of the app. Can be changed without breaking your app.
+const APP_ID: &str = "hc-smoke-test-beta-2"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
+pub const WINDOW_TITLE: &str = "hc-smoke-test-beta-2"; // Title of the window
 pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
 pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
 const PASSWORD: &str = "pass"; // Password to the lair keystore
@@ -274,7 +274,7 @@ pub async fn install_app_if_necessary(
             .map_err(|e| AppError::ConductorApiError(e))?;
 
         // replace-me --- replace the path with the correct path to your .happ file here
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/replace-me.happ"))
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/hc-stress-test.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws

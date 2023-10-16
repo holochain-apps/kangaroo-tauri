@@ -1,7 +1,7 @@
 [package]
-name = "holochain-kangaroo" # replace-me
-version = "0.0.0" # replace-me -- Choose wisely, see "Note on Versioning" in README
-description = "A Tauri App"
+name = "hc-smoke-test-beta-2" # replace-me
+version = "0.0.1" # replace-me -- Choose wisely, see "Note on Versioning" in README
+description = "Smoke testing holochain release candidates."
 authors = ["you"]
 license = ""
 repository = ""
