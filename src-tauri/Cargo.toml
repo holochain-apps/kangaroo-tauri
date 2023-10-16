@@ -1,5 +1,5 @@
 [package]
-name = "replace-me" # replace-me
+name = "hc-smoke-test-beta-1" # replace-me
 version = "0.0.1" # replace-me -- Choose wisely, see "Note on Versioning" in README
 description = "A Tauri App"
 authors = ["you"]
