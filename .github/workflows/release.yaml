@@ -2,7 +2,7 @@ name: "publish"
 on:
   push:
     branches:
-      - release
+      - release-smoke-test-0.2
 
 jobs:
   publish-tauri:
