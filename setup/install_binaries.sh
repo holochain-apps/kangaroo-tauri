@@ -1,18 +1,7 @@
 #!/bin/bash
 
-PLATFORM=$(rustc -vV | sed -n 's/^.*host: \(.*\)*$/\1/p')
 REQUIRED_HOLOCHAIN_VERSION="0.2.7-rc.1"
 REQUIRED_LAIR_VERSION="0.4.2"
-
-if [[ "$PLATFORM" == *windows* ]]; then
-  HOLOCHAIN_BINARY_FILENAME="holochain-v$REQUIRED_HOLOCHAIN_VERSION-$PLATFORM.exe"
-  LAIR_BINARY_FILENAME="lair-keystore-v$REQUIRED_LAIR_VERSION-$PLATFORM.exe"
-else
-  HOLOCHAIN_BINARY_FILENAME="holochain-v$REQUIRED_HOLOCHAIN_VERSION-$PLATFORM"
-  LAIR_BINARY_FILENAME="lair-keystore-v$REQUIRED_LAIR_VERSION-$PLATFORM"
-fi
-
-DESTINATION_DIR="src-tauri/bins"
 
 # Check that this script is being run from the right location
 if [ ! -f "package.json" ] || [ ! -f "src-tauri/tauri.conf.json" ];
@@ -28,32 +17,37 @@ then
     exit 1
 fi
 
-# create DESTINATION_DIR if it doesn't exist
-if [ ! -d $DESTINATION_DIR ];
-    then mkdir $DESTINATION_DIR
+# get target architecture triple, e.g. unknown-linux-gnu on Ubuntu 22.04
+TARGET_TRIPLE=$(rustc -vV | sed -n 's/^.*host: \(.*\)*$/\1/p')
+
+# create src-tauri/bins if id doesn't exist
+if [ ! -d src-tauri/bins ];
+    then mkdir src-tauri/bins
 fi
 
-# check whether correct holochain binary is already in the DESTINATION_DIR
-if [ -f "$DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME" ];
-    then
-        echo "Required holochain binary already installed."
+# check whether correct holochain binary is already in the src-tauri/bins folder
+if [ -f "src-tauri/bins/holochain-v${REQUIRED_HOLOCHAIN_VERSION}-$TARGET_TRIPLE" ];
+    then echo "Required holochain binary already installed."
     else
-        echo "Installing required holochain binary from matthme/holochain-binaries."
-        HOLOCHAIN_BINARIES_URL="https://github.com/matthme/holochain-binaries/releases/download/holochain-binaries-$REQUIRED_HOLOCHAIN_VERSION/$HOLOCHAIN_BINARY_FILENAME"
-        curl -L $HOLOCHAIN_BINARIES_URL -o $DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME
-        echo "holochain binary downloaded and save to $DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME"
+    	echo "Installing required holochain binary from crates.io"
+    	echo "Running command 'cargo install holochain --version $REQUIRED_HOLOCHAIN_VERSION --locked --features sqlite-encrypted'"
+        cargo install holochain --version $REQUIRED_HOLOCHAIN_VERSION --locked --features sqlite-encrypted
+        echo "Copying holochain binary to src-tauri/bins folder."
+        HOLOCHAIN_PATH=$(which holochain)
+        cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v${REQUIRED_HOLOCHAIN_VERSION}-$TARGET_TRIPLE
 fi
 
-# check whether correct lair binary is already in the DESTINATION_DIR
-if [ -f "$DESTINATION_DIR/$LAIR_BINARY_FILENAME" ];
+# check whether correct lair binary is already in the src-tauri/bins folder
+if [ -f "src-tauri/bins/lair-keystore-v${REQUIRED_LAIR_VERSION}-${TARGET_TRIPLE}" ];
 
-    then
-        echo "Required lair-keystore binary already installed."
+    then echo "Required lair-keystore binary already installed."
     else
     	echo "Installing required lair-keystore binary from crates.io"
-        LAIR_BINARIES_URL="https://github.com/matthme/holochain-binaries/releases/download/lair-binaries-$REQUIRED_LAIR_VERSION/$LAIR_BINARY_FILENAME"
-        curl -L $LAIR_BINARIES_URL -o $DESTINATION_DIR/$LAIR_BINARY_FILENAME
-        echo "lair binary downloaded and saved to $DESTINATION_DIR/$LAIR_BINARY_FILENAME"
+    	echo "Running command 'cargo install lair-keystore --version $REQUIRED_LAIR_VERSION --locked'"
+        cargo install  lair_keystore --version $REQUIRED_LAIR_VERSION --locked
+        echo "Copying lair-keystore binary to src-tauri/bins folder."
+        LAIR_PATH=$(which lair-keystore)
+        cp $LAIR_PATH src-tauri/bins/lair-keystore-v${REQUIRED_LAIR_VERSION}-$TARGET_TRIPLE
 fi
 
 echo "done."
