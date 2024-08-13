@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PLATFORM=$(rustc -vV | sed -n 's/^.*host: \(.*\)*$/\1/p')
-REQUIRED_HOLOCHAIN_VERSION="0.2.8"
+REQUIRED_HOLOCHAIN_VERSION="0.2.7-rc.1"
 REQUIRED_LAIR_VERSION="0.4.2"
 
 if [[ "$PLATFORM" == *windows* ]]; then
@@ -28,23 +28,23 @@ then
     exit 1
 fi
 
-# create src-tauri/bins if id doesn't exist
-if [ ! -d src-tauri/bins ];
-    then mkdir src-tauri/bins
+# create DESTINATION_DIR if it doesn't exist
+if [ ! -d $DESTINATION_DIR ];
+    then mkdir $DESTINATION_DIR
 fi
 
-# check whether correct holochain binary is already in the src-tauri/bins folder
+# check whether correct holochain binary is already in the DESTINATION_DIR
 if [ -f "$DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME" ];
     then
         echo "Required holochain binary already installed."
     else
         echo "Installing required holochain binary from matthme/holochain-binaries."
         HOLOCHAIN_BINARIES_URL="https://github.com/matthme/holochain-binaries/releases/download/holochain-binaries-$REQUIRED_HOLOCHAIN_VERSION/$HOLOCHAIN_BINARY_FILENAME"
-        curl -L $HOLOCHAIN_BINARIES_URL -o src-tauri/bins/$HOLOCHAIN_BINARY_FILENAME
+        curl -L $HOLOCHAIN_BINARIES_URL -o $DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME
         echo "holochain binary downloaded and save to $DESTINATION_DIR/$HOLOCHAIN_BINARY_FILENAME"
 fi
 
-# check whether correct lair binary is already in the src-tauri/bins folder
+# check whether correct lair binary is already in the DESTINATION_DIR
 if [ -f "$DESTINATION_DIR/$LAIR_BINARY_FILENAME" ];
 
     then
@@ -52,7 +52,7 @@ if [ -f "$DESTINATION_DIR/$LAIR_BINARY_FILENAME" ];
     else
     	echo "Installing required lair-keystore binary from crates.io"
         LAIR_BINARIES_URL="https://github.com/matthme/holochain-binaries/releases/download/lair-binaries-$REQUIRED_LAIR_VERSION/$LAIR_BINARY_FILENAME"
-        curl -L $LAIR_BINARIES_URL -o src-tauri/bins/$LAIR_BINARY_FILENAME
+        curl -L $LAIR_BINARIES_URL -o $DESTINATION_DIR/$LAIR_BINARY_FILENAME
         echo "lair binary downloaded and saved to $DESTINATION_DIR/$LAIR_BINARY_FILENAME"
 fi
 
