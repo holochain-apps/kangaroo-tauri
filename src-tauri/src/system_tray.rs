@@ -1,5 +1,7 @@
-use tauri::{AppHandle, CustomMenuItem, Manager, SystemTrayMenu, Wry, SystemTrayMenuItem, api::process};
-use crate::{filesystem::AppFileSystem, build_main_window};
+use crate::{build_main_window, filesystem::AppFileSystem};
+use tauri::{
+    api::process, AppHandle, CustomMenuItem, Manager, SystemTrayMenu, SystemTrayMenuItem, Wry,
+};
 
 pub fn handle_system_tray_event(app: &AppHandle<Wry>, event_id: String) {
     match event_id.as_str() {
@@ -7,29 +9,28 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, event_id: String) {
             let main_window = app.get_window("main");
 
             if let Some(window) = main_window {
-            window.show().unwrap();
-            window.unminimize().unwrap();
-            window.set_focus().unwrap();
+                window.show().unwrap();
+                window.unminimize().unwrap();
+                window.set_focus().unwrap();
             } else {
-            let fs = app.state::<AppFileSystem>().inner().to_owned();
-            let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
-            let _r = build_main_window(fs, app, app_port, admin_port);
+                let fs = app.state::<AppFileSystem>().inner().to_owned();
+                let (app_port, admin_port) = app.state::<(u16, u16)>().inner().to_owned();
+                let _r = build_main_window(fs, app, app_port, admin_port);
             }
         }
         "restart" => {
             process::kill_children();
             app.app_handle().restart();
-        },
+        }
         "quit" => {
             process::kill_children();
             app.exit(0);
-        },
+        }
         _ => (),
     }
 }
 
 pub fn app_system_tray() -> SystemTrayMenu {
-
     let mut menu = SystemTrayMenu::new();
 
     menu = menu.add_item(CustomMenuItem::new("open".to_string(), "Open"));

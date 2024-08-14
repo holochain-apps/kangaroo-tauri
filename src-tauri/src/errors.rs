@@ -3,7 +3,6 @@ use holochain_client::ConductorApiError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("Filesystem error: `{0}`")]
@@ -29,7 +28,6 @@ pub enum AppError {
 
     // #[error(transparent)]
     // ZipError(#[from] ZipError),
-
     #[error(transparent)]
     IoError(#[from] std::io::Error),
 
@@ -57,7 +55,6 @@ pub enum AppError {
     #[error(transparent)]
     LaunchHolochainError(#[from] LaunchHolochainError),
 }
-
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -88,7 +85,6 @@ pub enum LaunchHolochainError {
     ImpossibleError(String),
 }
 
-
 #[derive(Error, Serialize, Deserialize, Debug, Clone)]
 pub enum InitializeConductorError {
     #[error("Unknown Error: `{0}`")]
@@ -101,11 +97,9 @@ pub enum InitializeConductorError {
     AddressAlreadyInUse(String),
 }
 
-
 #[derive(Error, Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "content")]
 pub enum LairKeystoreError {
-
     #[error("Failed to launch child: `{0}`")]
     LaunchChildError(#[from] LaunchChildError),
 

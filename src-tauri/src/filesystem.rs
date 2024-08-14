@@ -4,7 +4,6 @@ use tauri::AppHandle;
 
 use crate::errors::{AppError, AppResult};
 
-
 /// Returns a string considering the relevant part of the version regarding breaking changes
 /// Examples:
 /// 3.2.0 becomes 3.x.x
@@ -19,13 +18,11 @@ pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
     }
 
     let breaking_version_string = match app_version.major {
-        0 => {
-            match app_version.minor {
-                0 => format!("0.0.{}", app_version.patch),
-                _ => format!("0.{}.x", app_version.minor),
-            }
+        0 => match app_version.minor {
+            0 => format!("0.0.{}", app_version.patch),
+            _ => format!("0.{}.x", app_version.minor),
         },
-        _ => format!("{}.x.x", app_version.major)
+        _ => format!("{}.x.x", app_version.major),
     };
 
     Ok(breaking_version_string)
@@ -42,7 +39,6 @@ pub struct AppFileSystem {
 
 impl AppFileSystem {
     pub fn new(app_handle: &AppHandle, profile: &Profile) -> AppResult<AppFileSystem> {
-
         let app_data_dir = app_handle
             .path_resolver()
             .app_data_dir()
@@ -71,7 +67,6 @@ impl AppFileSystem {
             .join(breaking_app_version(app_handle)?)
             .join(profile);
 
-
         Ok(AppFileSystem {
             app_data_dir,
             profile_data_dir,
@@ -85,7 +80,9 @@ impl AppFileSystem {
     }
 
     pub fn keystore_initialized(&self) -> bool {
-        self.keystore_dir().join("lair-keystore-config.yaml").exists()
+        self.keystore_dir()
+            .join("lair-keystore-config.yaml")
+            .exists()
     }
 
     pub fn conductor_dir(&self) -> PathBuf {
@@ -103,14 +100,14 @@ impl AppFileSystem {
                                 if file_type.is_dir() {
                                     profiles.push(entry.file_name().to_string_lossy().to_string());
                                 }
-                            },
+                            }
                             Err(e) => log::error!("Failed to get filetype of DirEntry: {}", e),
                         },
-                        Err(e) => log::error!("Got corrupted DirEntry: {}", e)
+                        Err(e) => log::error!("Got corrupted DirEntry: {}", e),
                     }
                 }
-            },
-            Err(e) => return Err(format!("Failed to read app data directory: {}", e))
+            }
+            Err(e) => return Err(format!("Failed to read app data directory: {}", e)),
         }
         Ok(profiles)
     }
@@ -126,7 +123,7 @@ impl AppFileSystem {
                     String::from("default")
                 }
             },
-            false => String::from("default")
+            false => String::from("default"),
         }
     }
 
@@ -137,7 +134,11 @@ impl AppFileSystem {
     }
 
     /// Writes the network seed to a file in the profile directory
-    pub fn set_profile_network_seed(&self, profile: String, network_seed: Option<String>) -> Result<(), String> {
+    pub fn set_profile_network_seed(
+        &self,
+        profile: String,
+        network_seed: Option<String>,
+    ) -> Result<(), String> {
         if let Some(seed) = network_seed {
             let new_profile_data_dir = self.app_data_dir.join(profile);
             std::fs::create_dir_all(new_profile_data_dir.clone())
@@ -160,10 +161,7 @@ impl AppFileSystem {
                     None
                 }
             },
-            false => None
+            false => None,
         }
     }
-
-
 }
-
