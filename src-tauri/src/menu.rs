@@ -1,9 +1,37 @@
 use tauri::api::dialog::message;
 use tauri::api::process;
-use tauri::{CustomMenuItem, Manager, Menu, Submenu, Window, Wry};
+use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBuilder, Wry};
 
 use crate::commands::profile::open_profile_settings;
-use crate::{filesystem::AppFileSystem, logs::open_logs_folder, APP_NAME};
+use crate::consts;
+use crate::utils::ZOOM_ON_SCROLL;
+use crate::{consts::APP_NAME, filesystem::AppFileSystem, logs::open_logs_folder};
+
+pub fn build_main_window(
+    fs: AppFileSystem,
+    app_handle: &AppHandle,
+    app_port: u16,
+    admin_port: u16,
+) -> Window {
+    WindowBuilder::new(
+        &app_handle.app_handle(),
+        "main",
+        tauri::WindowUrl::App("index.html".into())
+      )
+        // optional (OSmenu) -- Adds an OS menu to the app
+        .menu(build_menu())
+        // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
+        .disable_file_drop_handler()
+        .inner_size(consts::WINDOW_WIDTH, consts::WINDOW_HEIGHT)
+        .resizable(true)
+        .title(consts::WINDOW_TITLE)
+        .data_directory(fs.profile_data_dir)
+        .center()
+        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, consts::APP_ID).as_str())
+        .initialization_script(ZOOM_ON_SCROLL)
+        .build()
+        .unwrap()
+}
 
 pub fn build_menu() -> Menu {
     let version = CustomMenuItem::new("version".to_string(), "Version");

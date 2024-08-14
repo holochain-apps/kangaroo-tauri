@@ -7,8 +7,8 @@ use log4rs::{
     Config,
 };
 
-use crate::APP_NAME;
-use crate::{filesystem::AppFileSystem, APP_ID};
+use crate::consts::{APP_ID, APP_NAME};
+use crate::filesystem::AppFileSystem;
 
 pub fn setup_logs(fs: AppFileSystem) -> Result<(), String> {
     let logs_path = fs.profile_log_dir.join(format!("{}.log", APP_ID));

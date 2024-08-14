@@ -23,13 +23,10 @@ use holochain_client::{AdminWebsocket, InstallAppPayload};
 
 use lair::{initialize_keystore, launch_lair_keystore_process};
 use logs::{log, setup_logs};
-use menu::{build_menu, handle_menu_event};
+use menu::{build_main_window, handle_menu_event};
 use serde_json::Value;
 use system_tray::{app_system_tray, handle_system_tray_event};
-use tauri::{
-    api::process::Command, App, AppHandle, Manager, RunEvent, SystemTray, SystemTrayEvent, Window,
-    WindowBuilder,
-};
+use tauri::{api::process::Command, App, Manager, RunEvent, SystemTray, SystemTrayEvent, Window};
 
 use commands::{
     profile::{
@@ -38,20 +35,11 @@ use commands::{
     },
     restart::restart,
 };
-use utils::{create_and_apply_lair_symlink, sign_zome_call, ZOOM_ON_SCROLL};
-
-const APP_NAME: &str = "replace-me"; // name of the app. Can be changed without breaking your app.
-const APP_ID: &str = "replace-me"; // App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
-pub const WINDOW_TITLE: &str = "replace-me"; // Title of the window
-pub const WINDOW_WIDTH: f64 = 1400.0; // Default window width when the app is opened
-pub const WINDOW_HEIGHT: f64 = 880.0; // Default window height when the app is opened
-const PASSWORD: &str = "pass"; // Password to the lair keystore
-pub const DEFAULT_NETWORK_SEED: Option<&str> = None; // replace-me (optional): Depending on your application, you may want to put a network seed here or
-                                                     // read it secretly from an environment variable. If so, replace `None` with `Some("your network seed here")`
-const SIGNALING_SERVER: &str = "wss://signal.holo.host"; // replace-me (optional): Change the signaling server if you want
+use utils::{create_and_apply_lair_symlink, sign_zome_call};
 
 mod commands;
 mod conductor;
+mod consts;
 mod errors;
 mod filesystem;
 mod lair;
@@ -89,7 +77,6 @@ fn main() {
             let profile = match profile_from_cli {
                 Some(profile) => profile,
                 None => {
-                    // ========================================
                     // optional (single-instance) -- Allows only a single instance of your app running. Useful in combination with the systray
                     handle.plugin(tauri_plugin_single_instance::init(
                         move |app, _argv, _cwd| {
@@ -106,7 +93,6 @@ fn main() {
                             }
                         },
                     ))?;
-                    // ========================================
 
                     let fs_tmp = AppFileSystem::new(&handle, &String::from("default"))?;
                     fs_tmp.get_active_profile()
@@ -125,7 +111,7 @@ fn main() {
 
             tauri::async_runtime::block_on(async move {
                 let (meta_lair_client, app_port, admin_port) =
-                    launch(&fs, PASSWORD.to_string()).await.unwrap();
+                    launch(&fs, consts::PASSWORD.to_string()).await.unwrap();
 
                 app.manage(Mutex::new(meta_lair_client));
                 app.manage((app_port, admin_port));
@@ -158,32 +144,6 @@ fn main() {
         }
         Err(err) => log::error!("Error building the app: {:?}", err),
     }
-}
-
-pub fn build_main_window(
-    fs: AppFileSystem,
-    app_handle: &AppHandle,
-    app_port: u16,
-    admin_port: u16,
-) -> Window {
-    WindowBuilder::new(
-        &app_handle.app_handle(),
-        "main",
-        tauri::WindowUrl::App("index.html".into())
-      )
-        // optional (OSmenu) -- Adds an OS menu to the app
-        .menu(build_menu())
-        // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
-        .disable_file_drop_handler()
-        .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-        .resizable(true)
-        .title(WINDOW_TITLE)
-        .data_directory(fs.profile_data_dir)
-        .center()
-        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, APP_ID).as_str())
-        .initialization_script(ZOOM_ON_SCROLL)
-        .build()
-        .unwrap()
 }
 
 pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLairClient, u16, u16)> {
@@ -233,7 +193,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     let mut network_config = KitsuneP2pConfig::default();
     network_config.bootstrap_service = Some(url2::url2!("https://bootstrap.holo.host")); // replace-me (optional) -- change bootstrap server URL here if desired
     network_config.transport_pool.push(TransportConfig::WebRTC {
-        signal_url: SIGNALING_SERVER.into(),
+        signal_url: consts::SIGNALING_SERVER.into(),
     });
 
     config.network = Some(network_config);
@@ -299,7 +259,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
 
     let network_seed = match fs.read_profile_network_seed() {
         Some(seed) => Some(seed),
-        None => DEFAULT_NETWORK_SEED.map(|s| s.to_string()),
+        None => consts::DEFAULT_NETWORK_SEED.map(String::from),
     };
 
     install_app_if_necessary(network_seed, &mut admin_ws).await?;
@@ -325,11 +285,7 @@ fn read_profile_from_cli(app: &mut App) -> Result<Option<Profile>, tauri::Error>
                 }
                 Some(profile)
             }
-            _ => {
-                // println!("ERROR: Value passed to --profile option could not be interpreted as string.");
-                None
-                // panic!("Value passed to --profile option could not be interpreted as string.")
-            }
+            _ => None,
         },
         None => None,
     };
@@ -350,7 +306,7 @@ pub async fn install_app_if_necessary(
         .iter()
         .map(|info| info.installed_app_id.clone())
         .collect::<Vec<String>>()
-        .contains(&APP_ID.to_string())
+        .contains(&consts::APP_ID.to_string())
     {
         let agent_key = admin_ws
             .generate_agent_pub_key()
@@ -358,7 +314,7 @@ pub async fn install_app_if_necessary(
             .map_err(|e| AppError::ConductorApiError(e))?;
 
         // replace-me --- replace the path with the correct path to your .happ file here
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/hc-stress-test.happ"))
+        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/forum.happ"))
             .map_err(|e| AppError::AppBundleError(e))?;
 
         admin_ws
@@ -366,14 +322,14 @@ pub async fn install_app_if_necessary(
                 source: holochain_types::prelude::AppBundleSource::Bundle(app_bundle),
                 agent_key: agent_key.clone(),
                 network_seed: network_seed.clone(),
-                installed_app_id: Some(APP_ID.to_string()),
+                installed_app_id: Some(consts::APP_ID.to_string()),
                 membrane_proofs: HashMap::new(),
             })
             .await
             .map_err(|e| AppError::ConductorApiError(e))?;
 
         admin_ws
-            .enable_app(APP_ID.to_string())
+            .enable_app(consts::APP_ID.to_string())
             .await
             .map_err(|e| AppError::ConductorApiError(e))?;
     }
