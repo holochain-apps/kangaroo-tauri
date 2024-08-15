@@ -7,8 +7,8 @@ use log4rs::{
     Config,
 };
 
-use crate::consts::{APP_ID, APP_NAME};
-use crate::filesystem::AppFileSystem;
+use crate::app_state::filesystem::AppFileSystem;
+use crate::config::APP_ID;
 
 pub fn setup_logs(fs: AppFileSystem) -> Result<(), String> {
     let logs_path = fs.profile_log_dir.join(format!("{}.log", APP_ID));
@@ -25,13 +25,6 @@ pub fn setup_logs(fs: AppFileSystem) -> Result<(), String> {
 
     log4rs::init_config(config).map_err(|err| format!("Could not init log config: {:?}", err))?;
 
-    Ok(())
-}
-
-/// Tauri command to add a log from the UI via tauri's js API
-#[tauri::command]
-pub fn log(log: String) -> Result<(), String> {
-    log::info!("[{} UI] {}", APP_NAME, log);
     Ok(())
 }
 

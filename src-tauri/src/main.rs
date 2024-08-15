@@ -1,51 +1,30 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
-
-use crate::errors::{AppError, AppResult};
-use conductor::launch_holochain_process;
-use errors::{LairKeystoreError, LaunchHolochainError};
-use filesystem::{AppFileSystem, Profile};
-use futures::lock::Mutex;
-use holochain::{
-    conductor::{
-        config::{AdminInterfaceConfig, ConductorConfig, KeystoreConfig},
-        interface::InterfaceDriver,
-        Conductor, ConductorBuilder,
-    },
-    prelude::{KitsuneP2pConfig, TransportConfig},
+use app::{
+    menu::handle_menu_event,
+    setup_app,
+    system_tray::{app_system_tray, handle_system_tray_event},
 };
-use holochain_keystore::MetaLairClient;
-use holochain_types::prelude::AppBundle;
-
-use holochain_client::{AdminWebsocket, InstallAppPayload};
-
-use lair::{initialize_keystore, launch_lair_keystore_process};
-use logs::{log, setup_logs};
-use menu::{build_main_window, handle_menu_event};
-use serde_json::Value;
-use system_tray::{app_system_tray, handle_system_tray_event};
-use tauri::{api::process::Command, App, Manager, RunEvent, SystemTray, SystemTrayEvent, Window};
-
 use commands::{
+    log::log,
     profile::{
         get_active_profile, get_existing_profiles, open_profile_settings, set_active_profile,
         set_profile_network_seed,
     },
     restart::restart,
+    sign_zome_call::sign_zome_call,
 };
-use utils::{create_and_apply_lair_symlink, sign_zome_call};
+use tauri::{RunEvent, SystemTray, SystemTrayEvent};
 
+mod app;
+mod app_state;
 mod commands;
-mod conductor;
-mod consts;
+mod config;
 mod errors;
-mod filesystem;
-mod lair;
+mod launch;
 mod logs;
-mod menu;
-mod system_tray;
+mod process;
 mod utils;
 
 fn main() {
@@ -54,7 +33,7 @@ fn main() {
         // optional (systray) -- Adds your app with an icon to the OS system tray.
         .system_tray(SystemTray::new().with_menu(app_system_tray()))
         .on_system_tray_event(|app, event| match event {
-            SystemTrayEvent::MenuItemClick { id, .. } => handle_system_tray_event(app, id),
+            SystemTrayEvent::MenuItemClick { id, .. } => handle_system_tray_event(app, &id),
             _ => {}
         })
         .invoke_handler(tauri::generate_handler![
@@ -67,61 +46,7 @@ fn main() {
             open_profile_settings,
             restart,
         ])
-        .setup(|app| {
-            let handle = app.handle();
-
-            // convert profile from CLI to option, then read from filesystem instead. if profile from CLI,
-            // then set current profile!
-            let profile_from_cli = read_profile_from_cli(app)?;
-
-            let profile = match profile_from_cli {
-                Some(profile) => profile,
-                None => {
-                    // optional (single-instance) -- Allows only a single instance of your app running. Useful in combination with the systray
-                    handle.plugin(tauri_plugin_single_instance::init(
-                        move |app, _argv, _cwd| {
-                            let main_window = app.get_window("main");
-                            if let Some(window) = main_window {
-                                window.show().unwrap();
-                                window.unminimize().unwrap();
-                                window.set_focus().unwrap();
-                            } else {
-                                let fs = app.state::<AppFileSystem>().inner().to_owned();
-                                let (app_port, admin_port) =
-                                    app.state::<(u16, u16)>().inner().to_owned();
-                                let _r = build_main_window(fs, app, app_port, admin_port);
-                            }
-                        },
-                    ))?;
-
-                    let fs_tmp = AppFileSystem::new(&handle, &String::from("default"))?;
-                    fs_tmp.get_active_profile()
-                }
-            };
-
-            // start conductor and lair
-            let fs = AppFileSystem::new(&handle, &profile).unwrap();
-
-            // set up logs
-            if let Err(err) = setup_logs(fs.clone()) {
-                println!("Error setting up the logs: {:?}", err);
-            }
-
-            app.manage(fs.clone());
-
-            tauri::async_runtime::block_on(async move {
-                let (meta_lair_client, app_port, admin_port) =
-                    launch(&fs, consts::PASSWORD.to_string()).await.unwrap();
-
-                app.manage(Mutex::new(meta_lair_client));
-                app.manage((app_port, admin_port));
-
-                let _app_window: Window =
-                    build_main_window(fs, &app.app_handle(), app_port, admin_port);
-            });
-
-            Ok(())
-        })
+        .setup(setup_app)
         .build(tauri::generate_context!());
 
     match builder_result {
@@ -143,225 +68,5 @@ fn main() {
             });
         }
         Err(err) => log::error!("Error building the app: {:?}", err),
-    }
-}
-
-pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLairClient, u16, u16)> {
-    let log_level = log::Level::Warn;
-
-    if !fs.keystore_dir().exists() {
-        std::fs::create_dir_all(fs.keystore_dir().clone())?;
-    }
-
-    if !fs.conductor_dir().exists() {
-        std::fs::create_dir_all(fs.conductor_dir().clone())?;
-    }
-
-    // initialize lair keystore if necessary
-    if !fs.keystore_initialized() {
-        initialize_keystore(fs.keystore_dir(), password.clone()).await?;
-    }
-
-    // spawn lair keystore process and connect to it
-    let lair_url =
-        launch_lair_keystore_process(log_level.clone(), fs.keystore_dir(), password.clone())
-            .await?;
-
-    let meta_lair_client = holochain_keystore::lair_keystore::spawn_lair_keystore(
-        lair_url.clone(),
-        sodoken::BufRead::from(password.clone().into_bytes()),
-    )
-    .await
-    .map_err(|e| LairKeystoreError::SpawnMetaLairClientError(format!("{}", e)))?;
-
-    // write conductor config to file
-
-    let mut config = ConductorConfig::default();
-    config.environment_path = fs.conductor_dir().into();
-    config.keystore = KeystoreConfig::LairServer {
-        connection_url: lair_url,
-    };
-
-    let admin_port = portpicker::pick_unused_port().expect("Cannot find any unused port");
-
-    config.admin_interfaces = Some(vec![AdminInterfaceConfig {
-        driver: InterfaceDriver::Websocket {
-            port: admin_port.clone(),
-        },
-    }]);
-
-    let mut network_config = KitsuneP2pConfig::default();
-    network_config.bootstrap_service = Some(url2::url2!("https://bootstrap.holo.host")); // replace-me (optional) -- change bootstrap server URL here if desired
-    network_config.transport_pool.push(TransportConfig::WebRTC {
-        signal_url: consts::SIGNALING_SERVER.into(),
-    });
-
-    config.network = Some(network_config);
-
-    // TODO more graceful error handling
-    let config_string =
-        serde_yaml::to_string(&config).expect("Could not convert conductor config to string");
-
-    let conductor_config_path = fs.conductor_dir().join("conductor-config.yaml");
-
-    std::fs::write(conductor_config_path.clone(), config_string)
-        .expect("Could not write conductor config");
-
-    // NEW_VERSION change holochain version number here if necessary
-    let command = Command::new_sidecar("holochain-v0.2.7-rc.1").map_err(|err| {
-        AppError::LaunchHolochainError(LaunchHolochainError::SidecarBinaryCommandError(format!(
-            "{}",
-            err
-        )))
-    })?;
-
-    let _command_child =
-        launch_holochain_process(log_level, command, conductor_config_path, password).await?;
-
-    std::thread::sleep(Duration::from_millis(100));
-
-    // Try to connect twice. This fixes the os(111) error for now that occurs when the conducor is not ready yet.
-    let mut admin_ws = match AdminWebsocket::connect(format!("ws://localhost:{}", admin_port)).await
-    {
-        Ok(ws) => ws,
-        Err(_) => {
-            log::error!("[HOLOCHAIN] Could not connect to the AdminWebsocket. Starting another attempt in 5 seconds.");
-            std::thread::sleep(Duration::from_millis(5000));
-            AdminWebsocket::connect(format!("ws://localhost:{}", admin_port))
-                .await
-                .map_err(|err| {
-                    LaunchHolochainError::CouldNotConnectToConductor(format!("{}", err))
-                })?
-        }
-    };
-
-    let app_port = {
-        let app_interfaces = admin_ws.list_app_interfaces().await.map_err(|e| {
-            LaunchHolochainError::CouldNotConnectToConductor(format!(
-                "Could not list app interfaces: {:?}",
-                e
-            ))
-        })?;
-
-        if app_interfaces.len() > 0 {
-            app_interfaces[0]
-        } else {
-            let free_port = portpicker::pick_unused_port().expect("No ports free");
-
-            admin_ws.attach_app_interface(free_port).await.or(Err(
-                LaunchHolochainError::CouldNotConnectToConductor(
-                    "Could not attach app interface".into(),
-                ),
-            ))?;
-            free_port
-        }
-    };
-
-    let network_seed = match fs.read_profile_network_seed() {
-        Some(seed) => Some(seed),
-        None => consts::DEFAULT_NETWORK_SEED.map(String::from),
-    };
-
-    install_app_if_necessary(network_seed, &mut admin_ws).await?;
-
-    Ok((meta_lair_client, app_port, admin_port))
-}
-
-fn read_profile_from_cli(app: &mut App) -> Result<Option<Profile>, tauri::Error> {
-    // reading profile from cli
-    let cli_matches = app.get_cli_matches()?;
-    let profile: Option<Profile> = match cli_matches.args.get("profile") {
-        Some(data) => match data.value.clone() {
-            Value::String(profile) => {
-                if profile == "default" {
-                    eprintln!("Error: The name 'default' is not allowed for a profile.");
-                    panic!("Error: The name 'default' is not allowed for a profile.");
-                }
-                // \, /, and ? have a meaning as path symbols or domain socket url symbols and are therefore not allowed
-                // because they would break stuff
-                if profile.contains("/") || profile.contains("\\") || profile.contains("?") {
-                    eprintln!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
-                    panic!("Error: \"/\", \"\\\" and \"?\" are not allowed in profile names.");
-                }
-                Some(profile)
-            }
-            _ => None,
-        },
-        None => None,
-    };
-
-    Ok(profile)
-}
-
-pub async fn install_app_if_necessary(
-    network_seed: Option<String>,
-    admin_ws: &mut AdminWebsocket,
-) -> AppResult<()> {
-    let apps = admin_ws
-        .list_apps(None)
-        .await
-        .map_err(|e| AppError::ConductorApiError(e))?;
-
-    if !apps
-        .iter()
-        .map(|info| info.installed_app_id.clone())
-        .collect::<Vec<String>>()
-        .contains(&consts::APP_ID.to_string())
-    {
-        let agent_key = admin_ws
-            .generate_agent_pub_key()
-            .await
-            .map_err(|e| AppError::ConductorApiError(e))?;
-
-        // replace-me --- replace the path with the correct path to your .happ file here
-        let app_bundle = AppBundle::decode(include_bytes!("../../pouch/forum.happ"))
-            .map_err(|e| AppError::AppBundleError(e))?;
-
-        admin_ws
-            .install_app(InstallAppPayload {
-                source: holochain_types::prelude::AppBundleSource::Bundle(app_bundle),
-                agent_key: agent_key.clone(),
-                network_seed: network_seed.clone(),
-                installed_app_id: Some(consts::APP_ID.to_string()),
-                membrane_proofs: HashMap::new(),
-            })
-            .await
-            .map_err(|e| AppError::ConductorApiError(e))?;
-
-        admin_ws
-            .enable_app(consts::APP_ID.to_string())
-            .await
-            .map_err(|e| AppError::ConductorApiError(e))?;
-    }
-
-    Ok(())
-}
-
-async fn _try_build_conductor(
-    conductor_builder: ConductorBuilder,
-    keystore_data_dir: PathBuf,
-    config: ConductorConfig,
-    password: String,
-) -> AppResult<Arc<Conductor>> {
-    match conductor_builder.build().await {
-        Ok(conductor) => Ok(conductor),
-        Err(e) => {
-            if cfg!(target_family = "unix")
-                && e.to_string()
-                    .contains("path must be shorter than libc::sockaddr_un.sun_path")
-            {
-                create_and_apply_lair_symlink(keystore_data_dir)?;
-                return Conductor::builder()
-                    .config(config)
-                    .passphrase(Some(
-                        utils::vec_to_locked(password.into_bytes())
-                            .map_err(|e| AppError::IoError(e))?,
-                    ))
-                    .build()
-                    .await
-                    .map_err(|e| AppError::ConductorError(e));
-            }
-            Err(AppError::ConductorError(e))
-        }
     }
 }

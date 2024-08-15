@@ -3,9 +3,9 @@ use tauri::api::process;
 use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBuilder, Wry};
 
 use crate::commands::profile::open_profile_settings;
-use crate::consts;
+use crate::config;
 use crate::utils::ZOOM_ON_SCROLL;
-use crate::{consts::APP_NAME, filesystem::AppFileSystem, logs::open_logs_folder};
+use crate::{app_state::filesystem::AppFileSystem, logs::open_logs_folder};
 
 pub fn build_main_window(
     fs: AppFileSystem,
@@ -22,12 +22,12 @@ pub fn build_main_window(
         .menu(build_menu())
         // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
         .disable_file_drop_handler()
-        .inner_size(consts::WINDOW_WIDTH, consts::WINDOW_HEIGHT)
+        .inner_size(config::WINDOW_WIDTH, config::WINDOW_HEIGHT)
         .resizable(true)
-        .title(consts::WINDOW_TITLE)
+        .title(config::WINDOW_TITLE)
         .data_directory(fs.profile_data_dir)
         .center()
-        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, consts::APP_ID).as_str())
+        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, config::APP_ID).as_str())
         .initialization_script(ZOOM_ON_SCROLL)
         .build()
         .unwrap()
@@ -65,7 +65,7 @@ pub fn build_menu() -> Menu {
                 .add_item(quit),
         );
 
-        return Menu::os_default(APP_NAME).add_submenu(app_menu_submenu);
+        return Menu::os_default(config::APP_NAME).add_submenu(app_menu_submenu);
     }
 
     Menu::new().add_submenu(menu_submenu)
@@ -77,7 +77,7 @@ pub fn handle_menu_event(event_id: &str, window: &Window<Wry>) {
     match event_id {
         "version" => message(
             Some(&window),
-            APP_NAME,
+            config::APP_NAME,
             format!(
                 "Version {}",
                 app_handle.package_info().version.to_string().as_str()

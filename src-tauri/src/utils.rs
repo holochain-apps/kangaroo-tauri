@@ -1,64 +1,10 @@
+use holochain_client::AdminWebsocket;
 use std::path::PathBuf;
-
-use holochain_keystore::MetaLairClient;
-use holochain_types::prelude::ZomeCallUnsigned;
-use holochain_zome_types::{CapSecret, CellId, ExternIO, FunctionName, Timestamp, ZomeName};
-
-use holochain_client::{AdminWebsocket, AgentPubKey, ZomeCall};
-
-use serde::Deserialize;
+use tauri::AppHandle;
 
 use crate::errors::{AppError, AppResult, LairKeystoreError};
 
-#[tauri::command]
-pub async fn sign_zome_call(
-    meta_lair_client: tauri::State<'_, futures::lock::Mutex<MetaLairClient>>,
-    zome_call_unsigned: ZomeCallUnsignedTauri,
-) -> Result<ZomeCall, String> {
-    let zome_call_unsigned_converted: ZomeCallUnsigned = zome_call_unsigned.into();
-
-    let keystore = meta_lair_client.lock().await;
-
-    let signed_zome_call =
-        ZomeCall::try_from_unsigned_zome_call(&keystore, zome_call_unsigned_converted)
-            .await
-            .map_err(|e| format!("Failed to sign zome call: {}", e))?;
-
-    // let conductor = conductor.lock().await;
-    // let lair_client = conductor.keystore().lair_client();
-
-    // let pub_key = zome_call_unsigned_converted.provenance.clone();
-    // let mut pub_key_2 = [0; 32];
-    // pub_key_2.copy_from_slice(pub_key.get_raw_32());
-
-    // let data_to_sign = zome_call_unsigned_converted.data_to_sign().unwrap();
-    //     // .map_err(|e| format!("Failed to get data to sign from unsigned zome call: {}", e))
-    //     // .map_err(|e| AppError::SignZomeCallError(e))?;
-
-    // let sig = lair_client.sign_by_pub_key(
-    //     BinDataSized::from(pub_key_2),
-    //     None,
-    //     data_to_sign,
-    // ).await.unwrap();
-    //     // .map_err(|e| AppError::SignZomeCallError(e.to_string()))?;
-
-    // let signature = Signature(*sig.0);
-
-    // let signed_zome_call = ZomeCall {
-    //     cell_id: zome_call_unsigned_converted.cell_id,
-    //     zome_name: zome_call_unsigned_converted.zome_name,
-    //     fn_name: zome_call_unsigned_converted.fn_name,
-    //     payload: zome_call_unsigned_converted.payload,
-    //     cap_secret: zome_call_unsigned_converted.cap_secret,
-    //     provenance: zome_call_unsigned_converted.provenance,
-    //     nonce: zome_call_unsigned_converted.nonce,
-    //     expires_at: zome_call_unsigned_converted.expires_at,
-    //     signature
-    // };
-
-    Ok(signed_zome_call)
-}
-
+#[allow(dead_code)]
 pub async fn get_admin_ws(admin_port: u16) -> AppResult<AdminWebsocket> {
     let admin_ws = AdminWebsocket::connect(format!("ws://localhost:{}", admin_port))
         .await
@@ -72,6 +18,7 @@ pub async fn get_admin_ws(admin_port: u16) -> AppResult<AdminWebsocket> {
     Ok(admin_ws)
 }
 
+#[allow(dead_code)]
 pub fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<sodoken::BufRead> {
     match sodoken::BufWrite::new_mem_locked(pass_tmp.len()) {
         Err(e) => {
@@ -85,37 +32,6 @@ pub fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<sodoken::BufRead>
                 pass_tmp.fill(0);
             }
             Ok(p.to_read())
-        }
-    }
-}
-
-/// The version of an unsigned zome call that's compatible with the serialization
-/// behavior of tauri's IPC channel (serde serialization)
-/// nonce is a byte array [u8, 32] because holochain's nonce type seems to
-/// have "non-serde" deserialization behavior.
-#[derive(Deserialize, Debug, Clone)]
-pub struct ZomeCallUnsignedTauri {
-    pub provenance: AgentPubKey,
-    pub cell_id: CellId,
-    pub zome_name: ZomeName,
-    pub fn_name: FunctionName,
-    pub cap_secret: Option<CapSecret>,
-    pub payload: ExternIO,
-    pub nonce: [u8; 32],
-    pub expires_at: Timestamp,
-}
-
-impl Into<ZomeCallUnsigned> for ZomeCallUnsignedTauri {
-    fn into(self) -> ZomeCallUnsigned {
-        ZomeCallUnsigned {
-            provenance: self.provenance,
-            cell_id: self.cell_id,
-            zome_name: self.zome_name,
-            fn_name: self.fn_name,
-            cap_secret: self.cap_secret,
-            payload: self.payload,
-            nonce: self.nonce.into(),
-            expires_at: self.expires_at,
         }
     }
 }
@@ -155,6 +71,7 @@ pub const ZOOM_ON_SCROLL: &str = r#"
 
 ///On Unix systems, there is a limit to the path length of a domain socket. This function creates a symlink to
 /// the lair directory from the tempdir instead and overwrites the connectionUrl in the lair-keystore-config.yaml
+#[allow(dead_code)]
 pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf) -> AppResult<()> {
     let mut keystore_dir = keystore_data_dir.clone();
 
@@ -172,9 +89,10 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf) -> AppResult<()
     // 1. read to string
     let mut lair_config_string =
         std::fs::read_to_string(keystore_dir.join("lair-keystore-config.yaml")).map_err(|e| {
-            LairKeystoreError::ErrorCreatingSymLink(
-                (format!("Failed to read lair-keystore-config.yaml: {}", e)),
-            )
+            LairKeystoreError::ErrorCreatingSymLink(format!(
+                "Failed to read lair-keystore-config.yaml: {}",
+                e
+            ))
         })?;
 
     // 2. filter out the line with the connectionUrl
@@ -194,9 +112,10 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf) -> AppResult<()
         Ok(url) => url,
         Err(e) => {
             return Err(AppError::LairKeystoreError(
-                LairKeystoreError::ErrorCreatingSymLink(
-                    (format!("Failed to parse URL for symlink lair path: {}", e)),
-                ),
+                LairKeystoreError::ErrorCreatingSymLink(format!(
+                    "Failed to parse URL for symlink lair path: {}",
+                    e
+                )),
             ))
         }
     };
@@ -220,12 +139,10 @@ pub fn create_and_apply_lair_symlink(keystore_data_dir: PathBuf) -> AppResult<()
         lair_config_string,
     )
     .map_err(|e| {
-        AppError::LairKeystoreError(LairKeystoreError::ErrorCreatingSymLink(
-            (format!(
-                "Failed to write lair-keystore-config.yaml after modification: {}",
-                e
-            )),
-        ))
+        AppError::LairKeystoreError(LairKeystoreError::ErrorCreatingSymLink(format!(
+            "Failed to write lair-keystore-config.yaml after modification: {}",
+            e
+        )))
     })
 }
 
@@ -235,9 +152,9 @@ pub struct LinesWithEndings<'a> {
     input: &'a str,
 }
 
-impl<'a> LinesWithEndings<'a> {
-    pub fn from(input: &'a str) -> LinesWithEndings<'a> {
-        LinesWithEndings { input: input }
+impl<'a> From<&'a str> for LinesWithEndings<'a> {
+    fn from(input: &'a str) -> Self {
+        LinesWithEndings { input }
     }
 }
 
@@ -258,4 +175,28 @@ impl<'a> Iterator for LinesWithEndings<'a> {
         self.input = rest;
         Some(line)
     }
+}
+
+/// Returns a string considering the relevant part of the version regarding breaking changes
+/// Examples:
+/// 3.2.0 becomes 3.x.x
+/// 0.2.2 becomes 0.2.x
+/// 0.0.5 becomes 0.0.5
+/// 0.2.3-alpha.2 remains 0.2.3-alpha.2 --> pre-releases always get their own storage location since we have to assume breaking changes
+pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
+    let app_version = app_handle.package_info().version.clone();
+
+    if app_version.pre.is_empty() == false {
+        return Ok(app_version.to_string());
+    }
+
+    let breaking_version_string = match app_version.major {
+        0 => match app_version.minor {
+            0 => format!("0.0.{}", app_version.patch),
+            _ => format!("0.{}.x", app_version.minor),
+        },
+        _ => format!("{}.x.x", app_version.major),
+    };
+
+    Ok(breaking_version_string)
 }

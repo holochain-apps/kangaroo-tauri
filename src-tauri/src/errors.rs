@@ -3,6 +3,7 @@ use holochain_client::ConductorApiError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+#[allow(dead_code)]
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("Filesystem error: `{0}`")]

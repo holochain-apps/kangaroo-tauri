@@ -22,3 +22,6 @@ pub const DEFAULT_NETWORK_SEED: Option<&str> = None;
 
 // (optional): Change the signaling server if you want
 pub const SIGNALING_SERVER: &str = "wss://signal.holo.host";
+
+// (optional) -- change bootstrap server URL here if desired
+pub const BOOTSTRAP_SERVER: &str = "https://bootstrap.holo.host";
