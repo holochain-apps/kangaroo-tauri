@@ -13,7 +13,7 @@ use tauri::api::process::Command;
 
 use crate::{
     app_state::filesystem::AppFileSystem,
-    config::{APP_ID, BOOTSTRAP_SERVER, DEFAULT_NETWORK_SEED, SIGNALING_SERVER},
+    config::{APP_ID, BOOTSTRAP_SERVER, DEFAULT_NETWORK_SEED, HOLOCHAIN_VERSION, SIGNALING_SERVER},
     errors::{AppError, AppResult, LairKeystoreError, LaunchHolochainError},
     process::{
         conductor::launch_holochain_process,
@@ -82,13 +82,12 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     std::fs::write(conductor_config_path.clone(), config_string)
         .expect("Could not write conductor config");
 
-    // NEW_VERSION change holochain version number here if necessary
-    let command = Command::new_sidecar("holochain-v0.2.7-rc.1").map_err(|err| {
-        AppError::LaunchHolochainError(LaunchHolochainError::SidecarBinaryCommandError(format!(
-            "{}",
-            err
-        )))
-    })?;
+    let command =
+        Command::new_sidecar(format!("holochain-v{}", HOLOCHAIN_VERSION)).map_err(|err| {
+            AppError::LaunchHolochainError(LaunchHolochainError::SidecarBinaryCommandError(
+                format!("{}", err),
+            ))
+        })?;
 
     launch_holochain_process(log_level, command, conductor_config_path, password).await?;
 

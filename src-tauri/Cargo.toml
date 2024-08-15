@@ -13,17 +13,19 @@ lto = true
 
 
 [build-dependencies]
+serde = { version = "1.0", features = ["derive"] }
 tauri-build = { version = "1.5", features = [] }
+toml = "0.8.19"
 
 [dependencies]
 
 ###### bump holochain dependencies here
 holochain_client = "0.4.9-rc.1"
-holochain = { version = "0.2.7-rc.1", features = ["sqlite-encrypted"] }
-holochain_keystore = "0.2.7-rc.0"
-holochain_types = "0.2.7-rc.1"
-holochain_zome_types = "0.2.7-rc.0"
-mr_bundle = "0.2.7-rc.0"
+holochain = { version = "0.2.8", features = ["sqlite-encrypted"] }
+holochain_keystore = "0.2.8"
+holochain_types = "0.2.8"
+holochain_zome_types = "0.2.8"
+mr_bundle = "0.2.8"
 ######
 
 either = "*"
@@ -43,11 +45,9 @@ tauri = { version = "1.5", features = ["devtools", "cli", "clipboard-write-text"
 thiserror = "1"
 url = "2.3.1"
 url2 = "0.0.6"
-
 # optional (single-instance):
 tauri-plugin-single-instance = { git = "https://github.com/matthme/plugins-workspace", branch = "single-instance-semver" }
 
 [features]
-# this feature is used for production builds or when `devPath` points to the filesystem
-# DO NOT REMOVE!!
+# DO NOT REMOVE: this feature is used for production builds or when `devPath` points to the filesystem
 custom-protocol = ["tauri/custom-protocol"]
