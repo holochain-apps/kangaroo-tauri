@@ -6,8 +6,8 @@
     "withGlobalTauri": true
   },
   "package": {
-    "productName": "replace-me",
-    "version": "0.0.0"
+    "productName": "forum",
+    "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
@@ -36,7 +36,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "replace-me.with-unique-identifier.in-reverse-domain-notation",
+      "identifier": "com.holochain.forum",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
