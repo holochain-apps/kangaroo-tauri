@@ -1,7 +1,7 @@
-use holochain_client::{AgentPubKey, ZomeCall};
-use holochain_zome_types::{
+use holochain::core::{
     CapSecret, CellId, ExternIO, FunctionName, Timestamp, ZomeCallUnsigned, ZomeName,
 };
+use holochain_client::{AgentPubKey, ZomeCall};
 use serde::Deserialize;
 
 use crate::app_state::AppState;

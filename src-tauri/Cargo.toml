@@ -2,7 +2,7 @@
 name = "holochain-kangaroo" # replace-me
 version = "0.0.0" # replace-me -- Choose wisely, see "Note on Versioning" in README
 description = "A Tauri App"
-authors = ["you"]
+authors = []
 license = ""
 repository = ""
 edition = "2021"
@@ -10,7 +10,6 @@ edition = "2021"
 [profile.release]
 opt-level = "z"
 lto = true
-
 
 [build-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -20,15 +19,14 @@ toml = "0.8.19"
 [dependencies]
 
 ###### bump holochain dependencies here
-holochain_client = "0.4.9-rc.1"
-holochain = { version = "0.2.8", features = ["sqlite-encrypted"] }
-holochain_keystore = "0.2.8"
-holochain_types = "0.2.8"
-holochain_zome_types = "0.2.8"
-mr_bundle = "0.2.8"
+holochain_client = "0.5.1"
+holochain = { version = "0.3.2", features = ["sqlite-encrypted"] }
+holochain_keystore = "0.3.2"
+holochain_types = "0.3.2"
+holochain_zome_types = "0.3.2"
+mr_bundle = "0.3.2"
 ######
 
-either = "*"
 futures = "0.3"
 log = "0.4.14"
 log4rs = "1.0.0"
@@ -47,6 +45,7 @@ url = "2.3.1"
 url2 = "0.0.6"
 # optional (single-instance):
 tauri-plugin-single-instance = { git = "https://github.com/matthme/plugins-workspace", branch = "single-instance-semver" }
+chrono = "0.4.38"
 
 [features]
 # DO NOT REMOVE: this feature is used for production builds or when `devPath` points to the filesystem

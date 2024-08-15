@@ -5,10 +5,14 @@ use holochain::{
         api::{AdminInterfaceConfig, InterfaceDriver},
         config::{ConductorConfig, KeystoreConfig},
     },
-    prelude::{AppBundle, KitsuneP2pConfig, TransportConfig},
+    prelude::{
+        dependencies::kitsune_p2p_types::config::{KitsuneP2pConfig, TransportConfig},
+        AppBundle,
+    },
 };
 use holochain_client::{AdminWebsocket, InstallAppPayload};
 use holochain_keystore::MetaLairClient;
+use holochain_types::websocket::AllowedOrigins;
 use tauri::api::process::Command;
 
 use crate::{
@@ -44,7 +48,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
 
     let meta_lair_client = holochain_keystore::lair_keystore::spawn_lair_keystore(
         lair_url.clone(),
-        sodoken::BufRead::from(password.clone().into_bytes()),
+        password.as_bytes().into(),
     )
     .await
     .map_err(|e| LairKeystoreError::SpawnMetaLairClientError(format!("{}", e)))?;
@@ -52,7 +56,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     // write conductor config to file
 
     let mut config = ConductorConfig::default();
-    config.environment_path = fs.conductor_dir().into();
+    config.data_root_path = Some(fs.conductor_dir().into());
     config.keystore = KeystoreConfig::LairServer {
         connection_url: lair_url,
     };
@@ -62,6 +66,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     config.admin_interfaces = Some(vec![AdminInterfaceConfig {
         driver: InterfaceDriver::Websocket {
             port: admin_port.clone(),
+            allowed_origins: AllowedOrigins::Any,
         },
     }]);
 
@@ -71,7 +76,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
         signal_url: SIGNALING_SERVER.into(),
     });
 
-    config.network = Some(network_config);
+    config.network = network_config;
 
     // TODO more graceful error handling
     let config_string =
@@ -117,15 +122,16 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
         })?;
 
         if app_interfaces.len() > 0 {
-            app_interfaces[0]
+            app_interfaces[0].port
         } else {
             let free_port = portpicker::pick_unused_port().expect("No ports free");
 
-            admin_ws.attach_app_interface(free_port).await.or(Err(
-                LaunchHolochainError::CouldNotConnectToConductor(
+            admin_ws
+                .attach_app_interface(free_port, AllowedOrigins::Any, Some(APP_ID.to_owned()))
+                .await
+                .or(Err(LaunchHolochainError::CouldNotConnectToConductor(
                     "Could not attach app interface".into(),
-                ),
-            ))?;
+                )))?;
             free_port
         }
     };

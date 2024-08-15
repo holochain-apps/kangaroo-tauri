@@ -1,5 +1,9 @@
+use std::net::SocketAddr;
+
+use holochain_client::{AdminWebsocket, IssueAppAuthenticationTokenPayload};
 use tauri::api::dialog::message;
 use tauri::api::process;
+use tauri::async_runtime::block_on;
 use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBuilder, Wry};
 
 use crate::commands::profile::open_profile_settings;
@@ -13,24 +17,58 @@ pub fn build_main_window(
     app_port: u16,
     admin_port: u16,
 ) -> Window {
+    let ws = block_on(async {
+        match AdminWebsocket::connect(SocketAddr::from(([127, 0, 0, 1], admin_port))).await {
+            Ok(ws) => ws,
+            Err(e) => panic!("Failed to connect to admin websocket: {:?}", e),
+        }
+    });
+    let app_authentication_token = block_on(async {
+        let result = ws
+            .issue_app_auth_token(IssueAppAuthenticationTokenPayload {
+                installed_app_id: config::APP_ID.to_string(),
+                expiry_seconds: 999999,
+                single_use: false,
+            })
+            .await;
+        match result {
+            Ok(r) => r.token,
+            Err(e) => panic!("Failed to issue app authentication token: {:?}", e),
+        }
+    });
+
     WindowBuilder::new(
         &app_handle.app_handle(),
         "main",
-        tauri::WindowUrl::App("index.html".into())
-      )
-        // optional (OSmenu) -- Adds an OS menu to the app
-        .menu(build_menu())
-        // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
-        .disable_file_drop_handler()
-        .inner_size(config::WINDOW_WIDTH, config::WINDOW_HEIGHT)
-        .resizable(true)
-        .title(config::WINDOW_TITLE)
-        .data_directory(fs.profile_data_dir)
-        .center()
-        .initialization_script(format!("window.__HC_LAUNCHER_ENV__ = {{ 'APP_INTERFACE_PORT': {}, 'ADMIN_INTERFACE_PORT': {}, 'INSTALLED_APP_ID': '{}' }}", app_port, admin_port, config::APP_ID).as_str())
-        .initialization_script(ZOOM_ON_SCROLL)
-        .build()
-        .unwrap()
+        tauri::WindowUrl::App("index.html".into()),
+    )
+    // optional (OSmenu) -- Adds an OS menu to the app
+    .menu(build_menu())
+    // optional -- diables file drop handler. Disabling is required for drag and drop to work on certain platforms
+    .disable_file_drop_handler()
+    .inner_size(config::WINDOW_WIDTH, config::WINDOW_HEIGHT)
+    .resizable(true)
+    .title(config::WINDOW_TITLE)
+    .data_directory(fs.profile_data_dir)
+    .center()
+    .initialization_script(
+        format!(
+            r#"window.__HC_LAUNCHER_ENV__ = {{
+              'APP_INTERFACE_PORT': {}, 
+              'ADMIN_INTERFACE_PORT': {}, 
+              'INSTALLED_APP_ID': '{}', 
+              'APP_INTERFACE_TOKEN": '{:?}',
+            }}"#,
+            app_port,
+            admin_port,
+            config::APP_ID,
+            app_authentication_token,
+        )
+        .as_str(),
+    )
+    .initialization_script(ZOOM_ON_SCROLL)
+    .build()
+    .unwrap()
 }
 
 pub fn build_menu() -> Menu {
