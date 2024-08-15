@@ -8,7 +8,6 @@ use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBui
 
 use crate::commands::profile::open_profile_settings;
 use crate::config;
-use crate::utils::ZOOM_ON_SCROLL;
 use crate::{app_state::filesystem::AppFileSystem, logs::open_logs_folder};
 
 pub fn build_main_window(
@@ -66,7 +65,7 @@ pub fn build_main_window(
         )
         .as_str(),
     )
-    .initialization_script(ZOOM_ON_SCROLL)
+    .initialization_script(include_str!("../initialization_scripts/zoomOnScroll.js"))
     .build()
     .unwrap()
 }

@@ -36,39 +36,6 @@ pub fn vec_to_locked(mut pass_tmp: Vec<u8>) -> std::io::Result<sodoken::BufRead>
     }
 }
 
-// Event-listener added to the window object to listten to CTRl + scroll events for altering the zoom factor of the webview
-pub const ZOOM_ON_SCROLL: &str = r#"
-	// Adding event listeners to adjust zoom level on Ctrl + scroll
-	function increaseZoomLevel(amount) {
-	const percentageString = document.body.style.zoom;
-	let num = percentageString === "" ? 100 : parseInt(percentageString.slice(0, percentageString.length-1));
-	let newVal = num + Math.round(amount) < 500 ? num + Math.round(amount) : 500;
-	document.body.style.zoom = `${newVal}%`
-	}
-	function decreaseZoomLevel(amount) {
-	const percentageString = document.body.style.zoom;
-	let num = percentageString === "" ? 100 : parseInt(percentageString.slice(0, percentageString.length-1));
-	let newVal = num - Math.round(amount) > 30 ? num - Math.round(amount) : 30;
-	document.body.style.zoom = `${newVal}%`
-	}
-	window.onkeydown = (ev) => {
-	if (ev.key === "Control") {
-		window.onwheel = (ev) => {
-		if (ev.deltaY > 0) {
-			decreaseZoomLevel(10);
-		} else if (ev.deltaY < 0) {
-			increaseZoomLevel(10);
-		}
-		}
-	}
-	};
-	window.onkeyup = (ev) => {
-	if (ev.key === "Control") {
-		window.onwheel = null;
-	}
-	}
-"#;
-
 ///On Unix systems, there is a limit to the path length of a domain socket. This function creates a symlink to
 /// the lair directory from the tempdir instead and overwrites the connectionUrl in the lair-keystore-config.yaml
 #[allow(dead_code)]
