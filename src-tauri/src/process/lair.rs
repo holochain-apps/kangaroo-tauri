@@ -4,6 +4,7 @@ use url2::Url2;
 
 use tauri::api::process::{Command, CommandEvent};
 
+use crate::config::LAIR_KEYSTORE_VERSION;
 use crate::errors::{LairKeystoreError, LaunchChildError};
 
 pub async fn launch_lair_keystore_process(
@@ -76,20 +77,21 @@ pub async fn launch_lair_keystore_process(
     }
 
     // NEW_VERSION Check whether lair-keystore version needs to get updated
-    let (mut lair_rx, mut command_child) = Command::new_sidecar("lair-keystore-v0.4.2")
-        .or(Err(LairKeystoreError::LaunchChildError(
-            LaunchChildError::BinaryNotFound,
-        )))?
-        .args(&["server", "-p"])
-        .current_dir(keystore_path.clone())
-        .envs(envs.clone())
-        .spawn()
-        .map_err(|err| {
-            LairKeystoreError::LaunchChildError(LaunchChildError::FailedToExecute(format!(
-                "{:?}",
-                err
-            )))
-        })?;
+    let (mut lair_rx, mut command_child) =
+        Command::new_sidecar(format!("lair-keystore-v{}", LAIR_KEYSTORE_VERSION))
+            .or(Err(LairKeystoreError::LaunchChildError(
+                LaunchChildError::BinaryNotFound,
+            )))?
+            .args(&["server", "-p"])
+            .current_dir(keystore_path.clone())
+            .envs(envs.clone())
+            .spawn()
+            .map_err(|err| {
+                LairKeystoreError::LaunchChildError(LaunchChildError::FailedToExecute(format!(
+                    "{:?}",
+                    err
+                )))
+            })?;
 
     tauri::async_runtime::spawn(async move {
         std::thread::sleep(Duration::from_millis(10));
@@ -133,7 +135,7 @@ pub async fn launch_lair_keystore_process(
     });
 
     // NEW_VERSION Check whether lair-keystore version needs to get updated
-    let output = Command::new_sidecar("lair-keystore-v0.4.2")
+    let output = Command::new_sidecar(format!("lair-keystore-v{}", LAIR_KEYSTORE_VERSION))
         .or(Err(LairKeystoreError::LaunchChildError(
             LaunchChildError::BinaryNotFound,
         )))?
@@ -166,14 +168,15 @@ pub async fn initialize_keystore(
     password: String,
 ) -> Result<(), LairKeystoreError> {
     // NEW_VERSION Check whether lair-keystore version needs to get updated
-    let (mut lair_rx, mut command_child) = Command::new_sidecar("lair-keystore-v0.4.2")
-        .or(Err(LairKeystoreError::LaunchChildError(
-            LaunchChildError::BinaryNotFound,
-        )))?
-        .args(&["init", "-p"])
-        .current_dir(keystore_dir)
-        .spawn()
-        .map_err(|err| LaunchChildError::FailedToExecute(format!("{:?}", err)))?;
+    let (mut lair_rx, mut command_child) =
+        Command::new_sidecar(format!("lair-keystore-v{}", LAIR_KEYSTORE_VERSION))
+            .or(Err(LairKeystoreError::LaunchChildError(
+                LaunchChildError::BinaryNotFound,
+            )))?
+            .args(&["init", "-p"])
+            .current_dir(keystore_dir)
+            .spawn()
+            .map_err(|err| LaunchChildError::FailedToExecute(format!("{:?}", err)))?;
 
     tauri::async_runtime::spawn(async move {
         std::thread::sleep(Duration::from_millis(10));

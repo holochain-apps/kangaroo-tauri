@@ -28,3 +28,5 @@ pub const BOOTSTRAP_SERVER: &str = "https://bootstrap.holo.host";
 
 /// derived from build script, can be overridden
 pub const HOLOCHAIN_VERSION: &str = env!("HOLOCHAIN_VERSION");
+
+pub const LAIR_KEYSTORE_VERSION: &str = "0.4.5";

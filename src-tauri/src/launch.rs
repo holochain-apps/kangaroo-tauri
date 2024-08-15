@@ -26,7 +26,7 @@ use crate::{
 };
 
 pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLairClient, u16, u16)> {
-    let log_level = log::Level::Warn;
+    let log_level = log::Level::Info;
 
     if !fs.keystore_dir().exists() {
         std::fs::create_dir_all(fs.keystore_dir())?;
@@ -99,19 +99,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     std::thread::sleep(Duration::from_millis(100));
 
     // Try to connect twice. This fixes the os(111) error for now that occurs when the conducor is not ready yet.
-    let mut admin_ws = match AdminWebsocket::connect(format!("ws://localhost:{}", admin_port)).await
-    {
-        Ok(ws) => ws,
-        Err(_) => {
-            log::error!("[HOLOCHAIN] Could not connect to the AdminWebsocket. Starting another attempt in 5 seconds.");
-            std::thread::sleep(Duration::from_millis(5000));
-            AdminWebsocket::connect(format!("ws://localhost:{}", admin_port))
-                .await
-                .map_err(|err| {
-                    LaunchHolochainError::CouldNotConnectToConductor(format!("{}", err))
-                })?
-        }
-    };
+    let mut admin_ws = connect_to_admin_ws_with_retries(admin_port, 5).await?;
 
     let app_port = {
         let app_interfaces = admin_ws.list_app_interfaces().await.map_err(|e| {
@@ -188,4 +176,28 @@ pub async fn install_app_if_necessary(
     }
 
     Ok(())
+}
+
+async fn connect_to_admin_ws_with_retries(
+    admin_port: u16,
+    max_retries: u32,
+) -> Result<AdminWebsocket, LaunchHolochainError> {
+    let mut attempts = 0;
+
+    loop {
+        match AdminWebsocket::connect(format!("ws://localhost:{}", admin_port)).await {
+            Ok(ws) => return Ok(ws),
+            Err(_) if attempts < max_retries => {
+                attempts += 1;
+                log::error!("[HOLOCHAIN] Could not connect to the AdminWebsocket. Attempt {}/{}. Retrying in 5 seconds.", attempts, max_retries);
+                std::thread::sleep(Duration::from_secs(5));
+            }
+            Err(err) => {
+                return Err(LaunchHolochainError::CouldNotConnectToConductor(format!(
+                    "{}",
+                    err
+                )));
+            }
+        }
+    }
 }
