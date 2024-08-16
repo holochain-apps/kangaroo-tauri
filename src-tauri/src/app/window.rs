@@ -48,10 +48,10 @@ pub async fn build_main_window(
     .initialization_script(
         format!(
             r#"window.__HC_LAUNCHER_ENV__ = {{
-              'APP_INTERFACE_PORT': {}, 
-              'ADMIN_INTERFACE_PORT': {}, 
-              'INSTALLED_APP_ID': '{}', 
-              'APP_INTERFACE_TOKEN": '{:?}',
+              "APP_INTERFACE_PORT": {}, 
+              "ADMIN_INTERFACE_PORT": {}, 
+              "INSTALLED_APP_ID": "{}", 
+              "APP_INTERFACE_TOKEN": "{:?}",
             }}"#,
             app_port,
             admin_port,
