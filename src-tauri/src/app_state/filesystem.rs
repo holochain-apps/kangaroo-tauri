@@ -72,7 +72,6 @@ impl AppFileSystem {
 
     pub fn get_existing_profiles(&self) -> Result<Vec<Profile>, String> {
         let mut profiles = Vec::new();
-
         let dir_entries = std::fs::read_dir(&self.app_data_dir)
             .map_err(|e| format!("Failed to read app data directory: {}", e))?;
 
@@ -81,7 +80,6 @@ impl AppFileSystem {
                 log::error!("Got corrupted DirEntry: {}", e);
                 format!("Failed to get DirEntry: {}", e)
             })?;
-
             if let Ok(file_type) = entry.file_type() {
                 if file_type.is_dir() {
                     profiles.push(entry.file_name().to_string_lossy().to_string());
@@ -90,22 +88,21 @@ impl AppFileSystem {
                 log::error!("Failed to get filetype of DirEntry: {:?}", entry);
             }
         }
-
         Ok(profiles)
     }
 
     pub fn get_active_profile(&self) -> Profile {
         let active_profile_path = self.app_data_dir.join(".activeProfile");
-        match active_profile_path.exists() {
-            true => match std::fs::read_to_string(active_profile_path) {
-                Ok(profile) => profile,
-                Err(e) => {
-                    log::error!("Failed to read active profile from file: {}", e);
-                    eprintln!("Error: Failed to read active profile from file: {}", e);
-                    String::from("default")
-                }
-            },
-            false => String::from("default"),
+        if !active_profile_path.exists() {
+            return "default".into();
+        }
+        match std::fs::read_to_string(active_profile_path) {
+            Ok(profile) => profile,
+            Err(e) => {
+                log::error!("Failed to read active profile from file: {}", e);
+                eprintln!("Error: Failed to read active profile from file: {}", e);
+                "default".into()
+            }
         }
     }
 
@@ -134,16 +131,16 @@ impl AppFileSystem {
 
     pub fn read_profile_network_seed(&self) -> Option<String> {
         let network_seed_path = self.profile_data_dir.join(".networkSeed");
-        match network_seed_path.exists() {
-            true => match std::fs::read_to_string(network_seed_path) {
-                Ok(seed) => Some(seed),
-                Err(e) => {
-                    log::error!("Failed to read network seed from file: {}", e);
-                    eprintln!("Error: Failed to read network seed from file: {}", e);
-                    None
-                }
-            },
-            false => None,
+        if !network_seed_path.exists() {
+            return None;
+        }
+        match std::fs::read_to_string(network_seed_path) {
+            Ok(seed) => Some(seed),
+            Err(e) => {
+                log::error!("Failed to read network seed from file: {}", e);
+                eprintln!("Error: Failed to read network seed from file: {}", e);
+                None
+            }
         }
     }
 }
