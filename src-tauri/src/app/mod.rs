@@ -33,7 +33,15 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
                         window.set_focus().unwrap();
                     } else {
                         let state = app.state::<AppState>().inner().to_owned();
-                        build_main_window(state.fs.clone(), app, state.app_port, state.admin_port);
+                        tauri::async_runtime::block_on(async {
+                            build_main_window(
+                                state.fs.clone(),
+                                app,
+                                state.app_port,
+                                state.admin_port,
+                            )
+                            .await;
+                        })
                     }
                 },
             ))?;
@@ -58,7 +66,7 @@ pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             meta_lair_client: Mutex::new(meta_lair_client),
         };
         app.manage(app_state);
-        build_main_window(fs, &app.app_handle(), app_port, admin_port);
+        build_main_window(fs, &app.app_handle(), app_port, admin_port).await;
     });
 
     Ok(())

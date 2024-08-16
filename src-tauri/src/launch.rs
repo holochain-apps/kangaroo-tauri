@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, net::SocketAddr, time::Duration};
 
 use holochain::{
     conductor::{
@@ -99,7 +99,7 @@ pub async fn launch(fs: &AppFileSystem, password: String) -> AppResult<(MetaLair
     std::thread::sleep(Duration::from_millis(100));
 
     // Try to connect twice. This fixes the os(111) error for now that occurs when the conducor is not ready yet.
-    let mut admin_ws = connect_to_admin_ws_with_retries(admin_port, 5).await?;
+    let mut admin_ws = connect_to_admin_ws_with_retries(admin_port, 3).await?;
 
     let app_port = {
         let app_interfaces = admin_ws.list_app_interfaces().await.map_err(|e| {
@@ -185,7 +185,7 @@ async fn connect_to_admin_ws_with_retries(
     let mut attempts = 0;
 
     loop {
-        match AdminWebsocket::connect(format!("ws://localhost:{}", admin_port)).await {
+        match AdminWebsocket::connect(SocketAddr::from(([127, 0, 0, 1], admin_port))).await {
             Ok(ws) => return Ok(ws),
             Err(_) if attempts < max_retries => {
                 attempts += 1;

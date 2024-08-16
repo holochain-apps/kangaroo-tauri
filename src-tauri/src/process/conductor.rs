@@ -39,10 +39,7 @@ pub async fn launch_holochain_process(
     let mut launch_state = LaunchHolochainProcessState::Pending;
 
     holochain_child
-        .write(password.as_bytes())
-        .map_err(|err| LaunchHolochainError::ErrorWritingPassword(format!("{:?}", err)))?;
-    holochain_child
-        .write("\n".as_bytes())
+        .write(format!("{password}\n").as_bytes())
         .map_err(|err| LaunchHolochainError::ErrorWritingPassword(format!("{:?}", err)))?;
 
     let mut fatal_error = false;
@@ -50,7 +47,7 @@ pub async fn launch_holochain_process(
     // this loop will end in still pending when the conductor crashes before being ready
     // read events such as stdout
     while let Some(event) = holochain_rx.recv().await {
-        match event.clone() {
+        match &event {
             CommandEvent::Stdout(line) => {
                 log::info!("[HOLOCHAIN] {}", line);
                 if line.contains("Conductor ready.") {
@@ -129,7 +126,7 @@ pub async fn launch_holochain_process(
         // read events such as stdout
         while let Some(event) = holochain_rx.recv().await {
             match event.clone() {
-                CommandEvent::Stdout(line) => log::info!("[HOLOCHAIN] {}", line),
+                CommandEvent::Stdout(line) => println!("[HOLOCHAIN] {}", line),
                 CommandEvent::Stderr(line) => log::info!("[HOLOCHAIN] {}", line),
                 _ => log::info!("[HOLOCHAIN] {:?}", event),
             };

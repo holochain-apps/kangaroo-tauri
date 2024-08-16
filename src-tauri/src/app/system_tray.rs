@@ -15,7 +15,10 @@ pub fn handle_system_tray_event(app: &AppHandle<Wry>, event_id: &str) {
                 window.set_focus().unwrap();
             } else {
                 let state = app.state::<AppState>().inner().to_owned();
-                build_main_window(state.fs.clone(), app, state.app_port, state.admin_port);
+                tauri::async_runtime::block_on(async {
+                    build_main_window(state.fs.clone(), app, state.app_port, state.admin_port)
+                        .await;
+                });
             }
         }
         "restart" => {

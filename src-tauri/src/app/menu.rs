@@ -3,38 +3,33 @@ use std::net::SocketAddr;
 use holochain_client::{AdminWebsocket, IssueAppAuthenticationTokenPayload};
 use tauri::api::dialog::message;
 use tauri::api::process;
-use tauri::async_runtime::block_on;
 use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBuilder, Wry};
 
 use crate::commands::profile::open_profile_settings;
 use crate::config;
 use crate::{app_state::filesystem::AppFileSystem, logs::open_logs_folder};
 
-pub fn build_main_window(
+pub async fn build_main_window(
     fs: AppFileSystem,
     app_handle: &AppHandle,
     app_port: u16,
     admin_port: u16,
 ) -> Window {
-    let ws = block_on(async {
-        match AdminWebsocket::connect(SocketAddr::from(([127, 0, 0, 1], admin_port))).await {
-            Ok(ws) => ws,
-            Err(e) => panic!("Failed to connect to admin websocket: {:?}", e),
-        }
-    });
-    let app_authentication_token = block_on(async {
-        let result = ws
-            .issue_app_auth_token(IssueAppAuthenticationTokenPayload {
-                installed_app_id: config::APP_ID.to_string(),
-                expiry_seconds: 999999,
-                single_use: false,
-            })
-            .await;
-        match result {
-            Ok(r) => r.token,
-            Err(e) => panic!("Failed to issue app authentication token: {:?}", e),
-        }
-    });
+    let ws = match AdminWebsocket::connect(SocketAddr::from(([127, 0, 0, 1], admin_port))).await {
+        Ok(ws) => ws,
+        Err(e) => panic!("Failed to connect to admin websocket: {:?}", e),
+    };
+    let result = ws
+        .issue_app_auth_token(IssueAppAuthenticationTokenPayload {
+            installed_app_id: config::APP_ID.to_string(),
+            expiry_seconds: 999999,
+            single_use: false,
+        })
+        .await;
+    let app_authentication_token = match result {
+        Ok(r) => r.token,
+        Err(e) => panic!("Failed to issue app authentication token: {:?}", e),
+    };
 
     WindowBuilder::new(
         &app_handle.app_handle(),
