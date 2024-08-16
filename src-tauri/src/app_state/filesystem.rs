@@ -71,25 +71,26 @@ impl AppFileSystem {
     }
 
     pub fn get_existing_profiles(&self) -> Result<Vec<Profile>, String> {
-        let mut profiles: Vec<Profile> = vec![];
-        match std::fs::read_dir(&self.app_data_dir) {
-            Ok(dir) => {
-                for entry_result in dir {
-                    match entry_result {
-                        Ok(entry) => match entry.file_type() {
-                            Ok(file_type) => {
-                                if file_type.is_dir() {
-                                    profiles.push(entry.file_name().to_string_lossy().to_string());
-                                }
-                            }
-                            Err(e) => log::error!("Failed to get filetype of DirEntry: {}", e),
-                        },
-                        Err(e) => log::error!("Got corrupted DirEntry: {}", e),
-                    }
+        let mut profiles = Vec::new();
+
+        let dir_entries = std::fs::read_dir(&self.app_data_dir)
+            .map_err(|e| format!("Failed to read app data directory: {}", e))?;
+
+        for entry in dir_entries {
+            let entry = entry.map_err(|e| {
+                log::error!("Got corrupted DirEntry: {}", e);
+                format!("Failed to get DirEntry: {}", e)
+            })?;
+
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_dir() {
+                    profiles.push(entry.file_name().to_string_lossy().to_string());
                 }
+            } else {
+                log::error!("Failed to get filetype of DirEntry: {:?}", entry);
             }
-            Err(e) => return Err(format!("Failed to read app data directory: {}", e)),
         }
+
         Ok(profiles)
     }
 
