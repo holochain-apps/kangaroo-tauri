@@ -66,12 +66,12 @@ pub async fn build_main_window(
 }
 
 pub fn build_menu() -> Menu {
-    let version = CustomMenuItem::new("version".to_string(), "Version");
-    let change_profile = CustomMenuItem::new("change_profile".to_string(), "Change Profile");
-    let open_logs = CustomMenuItem::new("open_logs".to_string(), "Open Logs");
-    let devtools = CustomMenuItem::new("devtools".to_string(), "Open DevTools");
-    let restart = CustomMenuItem::new("restart".to_string(), "Restart");
-    let quit = CustomMenuItem::new("quit".to_string(), "Quit");
+    let version = CustomMenuItem::new("version", "Version");
+    let change_profile = CustomMenuItem::new("change_profile", "Change Profile");
+    let open_logs = CustomMenuItem::new("open_logs", "Open Logs");
+    let devtools = CustomMenuItem::new("devtools", "Open DevTools");
+    let restart = CustomMenuItem::new("restart", "Restart");
+    let quit = CustomMenuItem::new("quit", "Quit");
 
     let menu_submenu = Submenu::new(
         "Menu",
