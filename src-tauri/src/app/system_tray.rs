@@ -1,4 +1,4 @@
-use super::menu::build_main_window;
+use super::window::build_main_window;
 use crate::app_state::AppState;
 use tauri::{
     api::process, AppHandle, CustomMenuItem, Manager, SystemTrayMenu, SystemTrayMenuItem, Wry,

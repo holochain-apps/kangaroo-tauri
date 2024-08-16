@@ -8,12 +8,12 @@ use crate::{
     logs::setup_logs,
 };
 use futures::lock::Mutex;
-use menu::build_main_window;
 use serde_json::Value;
 use tauri::{App, Manager};
+use window::build_main_window;
 
-pub mod menu;
 pub mod system_tray;
+pub mod window;
 
 pub fn setup_app(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle();

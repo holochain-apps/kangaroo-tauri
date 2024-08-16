@@ -2,9 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use app::{
-    menu::handle_menu_event,
     setup_app,
     system_tray::{app_system_tray, handle_system_tray_event},
+    window::handle_menu_event,
 };
 use commands::{
     log::log,
