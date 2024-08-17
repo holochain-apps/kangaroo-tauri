@@ -15,7 +15,7 @@ use commands::{
     restart::restart,
     sign_zome_call::sign_zome_call,
 };
-use tauri::{RunEvent, SystemTray, SystemTrayEvent};
+use tauri::{RunEvent, SystemTray};
 
 mod app;
 mod app_state;
@@ -32,10 +32,7 @@ fn main() {
         .on_menu_event(|event| handle_menu_event(event.menu_item_id(), event.window()))
         // optional (systray) -- Adds your app with an icon to the OS system tray.
         .system_tray(SystemTray::new().with_menu(app_system_tray()))
-        .on_system_tray_event(|app, event| match event {
-            SystemTrayEvent::MenuItemClick { id, .. } => handle_system_tray_event(app, &id),
-            _ => {}
-        })
+        .on_system_tray_event(handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![
             sign_zome_call,
             log,
