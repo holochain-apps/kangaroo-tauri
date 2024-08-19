@@ -4,13 +4,13 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain holochain-v0.2.7-rc.1.
+**Holochain Version**: The Kangaroo currently comes with Holochain `holochain-v0.3.2`.
 
 **Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
 
 # Instructions
 
-1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). Then follow the [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) instructions for your platform.
+1. Install [Rust](https://www.rust-lang.org/tools/install). Then follow the [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) instructions for your platform.
 
 2. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it.<br>
 Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**
@@ -21,13 +21,13 @@ Using it as a template allows you to start with a clean git history and the cont
 
 5. Add your `[your-project].happ` file and a `ui.zip` file containing your UI assets to the `./pouch` folder. If you scaffolded your app using the scaffolding tool, the `npm run package` command will have created the `.happ` file as well as a `dist.zip` file for you. In that case you can use said `dist.zip` file and rename it to `ui.zip`.
 
-6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
+6. Update the `package.json` file's name to that of your project. Navigate to the the `config.rs` file in `src-tauri/src/config.rs` and modify the const values to those of your project. Also update the `package` section in the `tauri.conf.json` file at `src-tauri/tauri.conf.json` with your app's values. Additionally update the tauri `Cargo.toml` file's `package` section with your app's values. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
 
 7. Add your app's icon: If you have an icon for your app, make sure to have it as a 1024x1024 pixel `.png` format and run `npm run tauri icon [path-to-your-1024x1024-png]` (https://tauri.app/v1/guides/features/icons). This will generate all the necessary icons and store it in `src-tauri/icons`
 
 8. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
 
-9. Build the app locally by running `npm run kangaroo`
+9. Build the app locally by running `npm run kangaroo` or `npm run tauri dev` to run your app in dev mode.
 
 ## Publish cross-platform Binaries
 
