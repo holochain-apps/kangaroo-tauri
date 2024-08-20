@@ -1,53 +1,49 @@
-use tauri::{WindowBuilder, Manager};
+use tauri::{Manager, WindowBuilder};
 
-use crate::{filesystem::{AppFileSystem, Profile}, menu::build_menu};
-
+use crate::app_state::{filesystem::Profile, AppState};
 
 #[tauri::command]
-pub fn get_existing_profiles(
-    fs: tauri::State<'_, AppFileSystem>,
-) -> Result<Vec<Profile>, String> {
-    fs.get_existing_profiles()
+pub fn get_existing_profiles(state: tauri::State<'_, AppState>) -> Result<Vec<Profile>, String> {
+    state.fs.get_existing_profiles()
 }
 
 #[tauri::command]
-pub fn get_active_profile(
-    fs: tauri::State<'_, AppFileSystem>,
-) -> Profile {
-    fs.get_active_profile()
+pub fn get_active_profile(state: tauri::State<'_, AppState>) -> Profile {
+    state.fs.get_active_profile()
 }
 
 #[tauri::command]
 pub fn set_active_profile(
-    fs: tauri::State<'_, AppFileSystem>,
-    profile: String
+    state: tauri::State<'_, AppState>,
+    profile: String,
 ) -> Result<(), String> {
-    fs.set_active_profile(&profile)
+    state.fs.set_active_profile(&profile)
 }
 
 #[tauri::command]
 pub fn set_profile_network_seed(
-    fs: tauri::State<'_, AppFileSystem>,
+    state: tauri::State<'_, AppState>,
     profile: String,
     network_seed: Option<String>,
 ) -> Result<(), String> {
-    fs.set_profile_network_seed(profile, network_seed)
+    state.fs.set_profile_network_seed(profile, network_seed)
 }
 
 #[tauri::command]
-pub fn open_profile_settings(
-    app_handle: tauri::AppHandle,
-) -> tauri::Result<()> {
+pub fn open_profile_settings(app_handle: tauri::AppHandle) -> tauri::Result<()> {
     if let Some(window) = app_handle.get_window("change_profile") {
         window.show().unwrap();
         window.unminimize().unwrap();
         window.set_focus().unwrap();
     } else {
-    let _ = WindowBuilder::new(
-        &app_handle,
-        "change_profile",
-        tauri::WindowUrl::App(std::path::PathBuf::from("kangaroo_assets").join("profiles.html"))
-        ).title("Change Profile")
+        let _ = WindowBuilder::new(
+            &app_handle,
+            "change_profile",
+            tauri::WindowUrl::App(
+                std::path::PathBuf::from("kangaroo_assets").join("profiles.html"),
+            ),
+        )
+        .title("Change Profile")
         .inner_size(580.0, 400.0)
         .center()
         .minimizable(false)

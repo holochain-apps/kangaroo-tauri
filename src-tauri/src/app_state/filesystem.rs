@@ -2,47 +2,24 @@ use std::path::PathBuf;
 
 use tauri::AppHandle;
 
-use crate::errors::{AppError, AppResult};
-
-
-/// Returns a string considering the relevant part of the version regarding breaking changes
-/// Examples:
-/// 3.2.0 becomes 3.x.x
-/// 0.2.2 becomes 0.2.x
-/// 0.0.5 becomes 0.0.5
-/// 0.2.3-alpha.2 remains 0.2.3-alpha.2 --> pre-releases always get their own storage location since we have to assume breaking changes
-pub fn breaking_app_version(app_handle: &AppHandle) -> AppResult<String> {
-    let app_version = app_handle.package_info().version.clone();
-
-    if app_version.pre.is_empty() == false {
-        return Ok(app_version.to_string());
-    }
-
-    let breaking_version_string = match app_version.major {
-        0 => {
-            match app_version.minor {
-                0 => format!("0.0.{}", app_version.patch),
-                _ => format!("0.{}.x", app_version.minor),
-            }
-        },
-        _ => format!("{}.x.x", app_version.major)
-    };
-
-    Ok(breaking_version_string)
-}
+use crate::{
+    errors::{AppError, AppResult},
+    utils::breaking_app_version,
+};
 
 pub type Profile = String;
-#[derive(Clone)]
+
+#[derive(Debug, Clone)]
 pub struct AppFileSystem {
     pub app_data_dir: PathBuf,
     pub profile_data_dir: PathBuf,
+    #[allow(dead_code)]
     pub profile_config_dir: PathBuf,
     pub profile_log_dir: PathBuf,
 }
 
 impl AppFileSystem {
     pub fn new(app_handle: &AppHandle, profile: &Profile) -> AppResult<AppFileSystem> {
-
         let app_data_dir = app_handle
             .path_resolver()
             .app_data_dir()
@@ -71,7 +48,6 @@ impl AppFileSystem {
             .join(breaking_app_version(app_handle)?)
             .join(profile);
 
-
         Ok(AppFileSystem {
             app_data_dir,
             profile_data_dir,
@@ -85,7 +61,9 @@ impl AppFileSystem {
     }
 
     pub fn keystore_initialized(&self) -> bool {
-        self.keystore_dir().join("lair-keystore-config.yaml").exists()
+        self.keystore_dir()
+            .join("lair-keystore-config.yaml")
+            .exists()
     }
 
     pub fn conductor_dir(&self) -> PathBuf {
@@ -93,40 +71,38 @@ impl AppFileSystem {
     }
 
     pub fn get_existing_profiles(&self) -> Result<Vec<Profile>, String> {
-        let mut profiles: Vec<Profile> = vec![];
-        match std::fs::read_dir(&self.app_data_dir) {
-            Ok(dir) => {
-                for entry_result in dir {
-                    match entry_result {
-                        Ok(entry) => match entry.file_type() {
-                            Ok(file_type) => {
-                                if file_type.is_dir() {
-                                    profiles.push(entry.file_name().to_string_lossy().to_string());
-                                }
-                            },
-                            Err(e) => log::error!("Failed to get filetype of DirEntry: {}", e),
-                        },
-                        Err(e) => log::error!("Got corrupted DirEntry: {}", e)
-                    }
+        let mut profiles = Vec::new();
+        let dir_entries = std::fs::read_dir(&self.app_data_dir)
+            .map_err(|e| format!("Failed to read app data directory: {}", e))?;
+
+        for entry in dir_entries {
+            let entry = entry.map_err(|e| {
+                log::error!("Got corrupted DirEntry: {}", e);
+                format!("Failed to get DirEntry: {}", e)
+            })?;
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_dir() {
+                    profiles.push(entry.file_name().to_string_lossy().to_string());
                 }
-            },
-            Err(e) => return Err(format!("Failed to read app data directory: {}", e))
+            } else {
+                log::error!("Failed to get filetype of DirEntry: {:?}", entry);
+            }
         }
         Ok(profiles)
     }
 
     pub fn get_active_profile(&self) -> Profile {
         let active_profile_path = self.app_data_dir.join(".activeProfile");
-        match active_profile_path.exists() {
-            true => match std::fs::read_to_string(active_profile_path) {
-                Ok(profile) => profile,
-                Err(e) => {
-                    log::error!("Failed to read active profile from file: {}", e);
-                    eprintln!("Error: Failed to read active profile from file: {}", e);
-                    String::from("default")
-                }
-            },
-            false => String::from("default")
+        if !active_profile_path.exists() {
+            return "default".into();
+        }
+        match std::fs::read_to_string(active_profile_path) {
+            Ok(profile) => profile,
+            Err(e) => {
+                log::error!("Failed to read active profile from file: {}", e);
+                eprintln!("Error: Failed to read active profile from file: {}", e);
+                "default".into()
+            }
         }
     }
 
@@ -137,7 +113,11 @@ impl AppFileSystem {
     }
 
     /// Writes the network seed to a file in the profile directory
-    pub fn set_profile_network_seed(&self, profile: String, network_seed: Option<String>) -> Result<(), String> {
+    pub fn set_profile_network_seed(
+        &self,
+        profile: String,
+        network_seed: Option<String>,
+    ) -> Result<(), String> {
         if let Some(seed) = network_seed {
             let new_profile_data_dir = self.app_data_dir.join(profile);
             std::fs::create_dir_all(new_profile_data_dir.clone())
@@ -151,19 +131,16 @@ impl AppFileSystem {
 
     pub fn read_profile_network_seed(&self) -> Option<String> {
         let network_seed_path = self.profile_data_dir.join(".networkSeed");
-        match network_seed_path.exists() {
-            true => match std::fs::read_to_string(network_seed_path) {
-                Ok(seed) => Some(seed),
-                Err(e) => {
-                    log::error!("Failed to read network seed from file: {}", e);
-                    eprintln!("Error: Failed to read network seed from file: {}", e);
-                    None
-                }
-            },
-            false => None
+        if !network_seed_path.exists() {
+            return None;
+        }
+        match std::fs::read_to_string(network_seed_path) {
+            Ok(seed) => Some(seed),
+            Err(e) => {
+                log::error!("Failed to read network seed from file: {}", e);
+                eprintln!("Error: Failed to read network seed from file: {}", e);
+                None
+            }
         }
     }
-
-
 }
-

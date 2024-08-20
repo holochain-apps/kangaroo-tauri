@@ -2,9 +2,9 @@ use log;
 use std::{collections::HashMap, path::PathBuf};
 use tauri::api::process::{Command, CommandChild, CommandEvent};
 
-
-use crate::errors::{AppError, LaunchHolochainError, LaunchChildError, InitializeConductorError, AppResult};
-
+use crate::errors::{
+    AppError, AppResult, InitializeConductorError, LaunchChildError, LaunchHolochainError,
+};
 
 enum LaunchHolochainProcessState {
     Pending,
@@ -24,70 +24,67 @@ pub async fn launch_holochain_process(
 
     let (mut holochain_rx, mut holochain_child) = command
         .args(&[
-        "-c",
-        conductor_config_path.into_os_string().to_str().unwrap(),
-        "-p",
+            "-c",
+            conductor_config_path.into_os_string().to_str().unwrap(),
+            "-p",
         ])
         .envs(envs)
         .spawn()
         .map_err(|err| {
-        AppError::LaunchHolochainError(LaunchHolochainError::LaunchChildError(LaunchChildError::FailedToExecute(format!("{}", err))))
+            AppError::LaunchHolochainError(LaunchHolochainError::LaunchChildError(
+                LaunchChildError::FailedToExecute(format!("{}", err)),
+            ))
         })?;
-
 
     let mut launch_state = LaunchHolochainProcessState::Pending;
 
-
     holochain_child
-        .write(password.as_bytes())
+        .write(format!("{password}\n").as_bytes())
         .map_err(|err| LaunchHolochainError::ErrorWritingPassword(format!("{:?}", err)))?;
-    holochain_child
-        .write("\n".as_bytes())
-        .map_err(|err| LaunchHolochainError::ErrorWritingPassword(format!("{:?}", err)))?;
-
 
     let mut fatal_error = false;
 
     // this loop will end in still pending when the conductor crashes before being ready
     // read events such as stdout
     while let Some(event) = holochain_rx.recv().await {
-
-        match event.clone() {
+        match &event {
             CommandEvent::Stdout(line) => {
-            log::info!("[HOLOCHAIN] {}", line);
-            if line.contains("Conductor ready.") {
-                launch_state = LaunchHolochainProcessState::Success;
-                break;
+                log::info!("[HOLOCHAIN] {}", line);
+                if line.contains("Conductor ready.") {
+                    launch_state = LaunchHolochainProcessState::Success;
+                    break;
+                }
             }
-            },
             CommandEvent::Stderr(line) => {
+                log::info!("[HOLOCHAIN] {}", line);
 
-            log::info!("[HOLOCHAIN] {}", line);
+                // Windows error handling:
+                // --------------------------------------
+                #[cfg(target_family = "windows")]
+                if line.contains("websocket_error_from_network=Io")
+                    && line.contains("ConnectionReset")
+                {
+                    launch_state = LaunchHolochainProcessState::InitializeConductorError(
+                        InitializeConductorError::AddressAlreadyInUse(
+                            String::from("Could not initialize Conductor from configuration: Address already in use")
+                        )
+                    );
+                    break;
+                }
+                // --------------------------------------
 
-            // Windows error handling:
-            // --------------------------------------
-            #[cfg(target_family="windows")]
-            if line.contains("websocket_error_from_network=Io") && line.contains("ConnectionReset") {
-                launch_state = LaunchHolochainProcessState::InitializeConductorError(
-                InitializeConductorError::AddressAlreadyInUse(
-                    String::from("Could not initialize Conductor from configuration: Address already in use")
-                )
-                );
-                break;
-            }
-            // --------------------------------------
-
-            // UNIX error handling:
-            // --------------------------------------
-            #[cfg(target_family="unix")]
-            if line.contains("FATAL PANIC PanicInfo") {
-                fatal_error = true;
-            }
-            #[cfg(target_family="unix")]
-            if line.contains("Well, this is embarrassing") { // This line occurs below FATAL PANIC but may potentially also appear without FATAL PANIC PanicInfo
-                fatal_error = true;
-            }
-            #[cfg(target_family="unix")]
+                // UNIX error handling:
+                // --------------------------------------
+                #[cfg(target_family = "unix")]
+                if line.contains("FATAL PANIC PanicInfo") {
+                    fatal_error = true;
+                }
+                #[cfg(target_family = "unix")]
+                if line.contains("Well, this is embarrassing") {
+                    // This line occurs below FATAL PANIC but may potentially also appear without FATAL PANIC PanicInfo
+                    fatal_error = true;
+                }
+                #[cfg(target_family="unix")]
             if line.contains("Could not initialize Conductor from configuration: InterfaceError(WebsocketError(Io(Os") && line.contains("Address already in use") {
                 launch_state = LaunchHolochainProcessState::InitializeConductorError(
                 InitializeConductorError::AddressAlreadyInUse(
@@ -96,7 +93,7 @@ pub async fn launch_holochain_process(
                 );
                 break;
             }
-            #[cfg(target_family="unix")]
+                #[cfg(target_family="unix")]
             if fatal_error == true && line.contains("DatabaseError(SqliteError(SqliteFailure(Error { code: NotADatabase, extended_code: 26 }, Some(\"file is not a database\"))))") {
                 launch_state = LaunchHolochainProcessState::InitializeConductorError(
                 InitializeConductorError::SqliteError(
@@ -105,54 +102,51 @@ pub async fn launch_holochain_process(
                 );
                 break;
             }
-            // if no known error was found between the line saying "FATAL PANIC ..." or "Well, this is embarrassing" and
-            // the line saying "Thank you kindly" it is an unknown error
-            #[cfg(target_family="unix")]
-            if fatal_error == true && line.contains("Thank you kindly!"){
+                // if no known error was found between the line saying "FATAL PANIC ..." or "Well, this is embarrassing" and
+                // the line saying "Thank you kindly" it is an unknown error
+                #[cfg(target_family = "unix")]
+                if fatal_error == true && line.contains("Thank you kindly!") {
                     launch_state = LaunchHolochainProcessState::InitializeConductorError(
                     InitializeConductorError::UnknownError(
                         String::from("Unknown error when trying to initialize conductor. See log file for details.")
                     )
                 );
+                }
             }
-            },
             // --------------------------------------
             _ => {
-            log::info!("[HOLOCHAIN] {:?}", event);
-            },
+                log::info!("[HOLOCHAIN] {:?}", event);
+            }
         };
-
-    };
+    }
 
     log::info!("Launched holochain");
 
-
     tauri::async_runtime::spawn(async move {
-    // read events such as stdout
-    while let Some(event) = holochain_rx.recv().await {
-        match event.clone() {
-        CommandEvent::Stdout(line) => log::info!("[HOLOCHAIN] {}", line),
-        CommandEvent::Stderr(line) => log::info!("[HOLOCHAIN] {}", line),
-        _ => log::info!("[HOLOCHAIN] {:?}", event),
-        };
-    }
+        // read events such as stdout
+        while let Some(event) = holochain_rx.recv().await {
+            match event.clone() {
+                CommandEvent::Stdout(line) => println!("[HOLOCHAIN] {}", line),
+                CommandEvent::Stderr(line) => log::info!("[HOLOCHAIN] {}", line),
+                _ => log::info!("[HOLOCHAIN] {:?}", event),
+            };
+        }
     });
-
 
     match launch_state {
         LaunchHolochainProcessState::Success => {
             log::info!("LaunchHolochainProcessState::Success");
             Ok(holochain_child)
-        },
+        }
         LaunchHolochainProcessState::InitializeConductorError(e) => {
             log::info!("LaunchHolochainProcessState::InitializeConductorError");
-            Err(AppError::LaunchHolochainError(LaunchHolochainError::CouldNotInitializeConductor(e)))
-        },
+            Err(AppError::LaunchHolochainError(
+                LaunchHolochainError::CouldNotInitializeConductor(e),
+            ))
+        }
         LaunchHolochainProcessState::Pending => {
             log::info!("LaunchHolochainProcessState::Pending");
             Err(AppError::LaunchHolochainError(LaunchHolochainError::ImpossibleError("LaunchHolochainProcessState still pending after launching the holochain process.".into())))
         }
     }
-
 }
-

@@ -4,22 +4,22 @@ Put your Holochain App in this Kangaroo's tauri pouch and let it run around.
 
 This repository let's you easily convert your Holochain app into a standalone tauri-based cross-platform Desktop app.
 
-**Holochain Version**: The Kangaroo currently comes with Holochain holochain-v0.2.7-rc.1.
+**Holochain Version**: The Kangaroo currently comes with Holochain `holochain-v0.3.2`.
 
 **Note**: Support for non-breaking updates to happ coordinator zomes is currently not built into the kangaroo.
 
 # Instructions
 
-1. Install [Rust](https://www.rust-lang.org/tools/install) and [Go](https://go.dev/doc/install) (Go is required for Holochain version 0.2.X). Then follow the [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) instructions for your platform.
+1. Install [Rust](https://www.rust-lang.org/tools/install). Then follow the [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) instructions for your platform.
 
 2. Either use this repository as a template (by clicking on the green "Use this template" button) or fork it.<br>
-Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**
+   Using it as a template allows you to start with a clean git history and the contributors of this repository won't show up as contributors to your new repository. **Forking has the advantage of being able to relatively easily pull in updates from this parent repository at a later stage.**
 
 3. After cloning the newly created repository, run `npm install` to install the relevant tauri dependencies.
 
 4. Compile the holochain and lair-keystore binaries if you intend to build your app locally. On macOS/Linux you can run `bash setup/install_binaries.sh` to do that automatically. On Windows, follow [this](compile-binaries.md) guide.
 
-5. Add your `[your-project].happ` file and a `ui.zip` file containing your UI assets to the `./pouch` folder. If you scaffolded your app using the scaffolding tool, the `npm run package` command will have created the `.happ` file as well as a `dist.zip` file for you. In that case you can use said `dist.zip` file and rename it to `ui.zip`.
+5. Add your `[your-project].happ` file and a `ui.zip` file containing your UI assets to the `./pouch` folder replacing the currently present sample `replace-me.happ` file and `ui.zip`. If you scaffolded your app using the scaffolding tool, the `npm run package` command will have created the `.happ` file as well as a `dist.zip` file for you. In that case you can use said `dist.zip` file and rename it to `ui.zip`.
 
 6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
 
@@ -27,7 +27,7 @@ Using it as a template allows you to start with a clean git history and the cont
 
 8. Set all the version numbers in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json`. The verison number in `src-tauri/Cargo.toml` is part of the filesystem storage logic, **read the [note on versioning](#note-on-versioning)**
 
-9. Build the app locally by running `npm run kangaroo`
+9. Build the app locally by running `npm run kangaroo` or `npm run tauri dev` to run your app in dev mode.
 
 ## Publish cross-platform Binaries
 
@@ -45,7 +45,6 @@ For further releases:
 
 3. Push to github to trigger the release workflow.
 
-
 ## Code-signed cross-platform Binaries
 
 The `.github/workflows/release-codesigned.yaml` contains a template workflow for binaries with macOS as well as Windows EV Certificate code signing. The workflow gets triggered when publishing on branch `release-codesigned`.
@@ -58,7 +57,6 @@ For the Windows part or if you want to only do macOS code signing, follow the in
 
 If you want to sign your Windows binaries with an OV certificate instead of an EV certificate, follow [tauri's instructions](https://tauri.app/v1/guides/distribution/sign-windows).
 
-
 ## Auto-Updating of your App
 
 To add automatic updates to your app, you may follow the instructions [here](https://tauri.app/v1/guides/distribution/updater).
@@ -66,13 +64,12 @@ An empty `updater.json` template file is part of this repository.
 
 Some important notes:
 
-* The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/). See [Note on versioning](#note-on-versioning)
+-   The Holochain Kangaroo stores data on the filesystem according to [semantic versioning](https://semver.org/). See [Note on versioning](#note-on-versioning)
 
-* If you bump your Holochain and/or lair keystore version, you need to consider whether it remains compatible with the existing Holochain conductor / lair keystore.
+-   If you bump your Holochain and/or lair keystore version, you need to consider whether it remains compatible with the existing Holochain conductor / lair keystore.
 
 As a consequence, **be careful not to trigger automatic updates on your end-users if your app
 is a breaking change due to one of the above mentioned scenarios**.
-
 
 ## Note on Versioning
 
@@ -90,12 +87,10 @@ Pre-releases are always stored in independent subfolders (0.1.0-alpha.1 is consi
 
 ## Troubleshooting
 
-* If you get the error `Error failed to bundle project: Failed to build data folders and files` when running `npm run tauri build`, a likely reason is that your `productName` in `src-tauri/tauri.conf.json` contains invalid characters, such as dots (`.`)
+-   If you get the error `Error failed to bundle project: Failed to build data folders and files` when running `npm run tauri build`, a likely reason is that your `productName` in `src-tauri/tauri.conf.json` contains invalid characters, such as dots (`.`)
 
-* If building the app fails with errors like `Error: No artifacts were found.` or `Error failed to bundle project: error running light.exe` the reason may again be that the `productName` in `src-tauri/tauri.conf.json` contains invalid characters such as parentheses (`(` or `)`) or possibly other unsupported special characters.
-
-
+-   If building the app fails with errors like `Error: No artifacts were found.` or `Error failed to bundle project: error running light.exe` the reason may again be that the `productName` in `src-tauri/tauri.conf.json` contains invalid characters such as parentheses (`(` or `)`) or possibly other unsupported special characters.
 
 ## Recommended IDE Setup
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+-   [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
