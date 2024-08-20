@@ -1,64 +1,64 @@
 {
-  "build": {
-    "beforeDevCommand": "npm run dist",
-    "devPath": "../dist",
-    "distDir": "../dist",
-    "withGlobalTauri": true
-  },
-  "package": {
-    "productName": "forum",
-    "version": "0.1.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "clipboard": {
-        "writeText": true
-      },
-      "shell": {
-        "all": false,
-        "open": true
-      }
+    "build": {
+        "beforeDevCommand": "npm run dist",
+        "devPath": "../dist",
+        "distDir": "../dist",
+        "withGlobalTauri": true
     },
-    "cli": {
-      "description": "Running replace-me from the command line",
-      "args": [
-        {
-          "name": "profile",
-          "takesValue": true,
-          "multiple": false
-        }
-      ]
+    "package": {
+        "productName": "replace-me",
+        "version": "0.1.0"
     },
-    "systemTray": {
-      "iconPath": "icons/32x32.png"
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.holochain.forum",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "externalBin": [
-        "bins/holochain-v0.3.2",
-        "bins/lair-keystore-v0.4.5"
-      ],
-      "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "",
-        "exceptionDomain": "",
-        "signingIdentity": null,
-        "entitlements": "entitlements.plist"
-      }
-    },
-    "security": {
-      "csp": null
-    },
-    "windows": []
-  }
+    "tauri": {
+        "allowlist": {
+            "all": false,
+            "clipboard": {
+                "writeText": true
+            },
+            "shell": {
+                "all": false,
+                "open": true
+            }
+        },
+        "cli": {
+            "description": "Running replace-me from the command line",
+            "args": [
+                {
+                    "name": "profile",
+                    "takesValue": true,
+                    "multiple": false
+                }
+            ]
+        },
+        "systemTray": {
+            "iconPath": "icons/32x32.png"
+        },
+        "bundle": {
+            "active": true,
+            "targets": "all",
+            "identifier": "replace-me.with-unique-identifier.in-reverse-domain-notation",
+            "icon": [
+                "icons/32x32.png",
+                "icons/128x128.png",
+                "icons/128x128@2x.png",
+                "icons/icon.icns",
+                "icons/icon.ico"
+            ],
+            "externalBin": [
+                "bins/holochain-v0.3.2",
+                "bins/lair-keystore-v0.4.5"
+            ],
+            "macOS": {
+                "frameworks": [],
+                "minimumSystemVersion": "",
+                "exceptionDomain": "",
+                "signingIdentity": null,
+                "entitlements": "entitlements.plist"
+            }
+        },
+        "security": {
+            "csp": null
+        },
+        "windows": []
+    }
 }

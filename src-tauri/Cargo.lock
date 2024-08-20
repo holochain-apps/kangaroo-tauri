@@ -2136,38 +2136,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "forum"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures",
- "holochain",
- "holochain_client",
- "holochain_keystore",
- "holochain_types",
- "holochain_zome_types",
- "log",
- "log4rs",
- "mr_bundle",
- "nanoid",
- "opener",
- "portpicker",
- "semver 1.0.19",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sodoken 0.0.9",
- "symlink",
- "tauri",
- "tauri-build",
- "tauri-plugin-single-instance",
- "thiserror",
- "toml 0.8.19",
- "url",
- "url2",
-]
-
-[[package]]
 name = "fragile"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6745,6 +6713,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2571463863a6bd50c32f94402933f03457a3fbaf697a707c5be741e459f08fd"
 dependencies = [
  "bytecheck",
+]
+
+[[package]]
+name = "replace-me"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures",
+ "holochain",
+ "holochain_client",
+ "holochain_keystore",
+ "holochain_types",
+ "holochain_zome_types",
+ "log",
+ "log4rs",
+ "mr_bundle",
+ "nanoid",
+ "opener",
+ "portpicker",
+ "semver 1.0.19",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "sodoken 0.0.9",
+ "symlink",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-single-instance",
+ "thiserror",
+ "toml 0.8.19",
+ "url",
+ "url2",
 ]
 
 [[package]]

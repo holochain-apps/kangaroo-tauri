@@ -1,11 +1,11 @@
 /// name of the app. Can be changed without breaking your app.
-pub const APP_NAME: &str = "forum";
+pub const APP_NAME: &str = "replace-me";
 
 /// App id used to install your app in the Holochain conductor - can be the same as APP_NAME. Changing this means a breaking change to your app.
-pub const APP_ID: &str = "forum";
+pub const APP_ID: &str = "replace-me";
 
 /// Title of the window
-pub const WINDOW_TITLE: &str = "forum";
+pub const WINDOW_TITLE: &str = "replace-me";
 
 /// Default window width when the app is opened
 pub const WINDOW_WIDTH: f64 = 1400.0;
