@@ -19,7 +19,7 @@ This repository let's you easily convert your Holochain app into a standalone ta
 
 4. Compile the holochain and lair-keystore binaries if you intend to build your app locally. On macOS/Linux you can run `bash setup/install_binaries.sh` to do that automatically. On Windows, follow [this](compile-binaries.md) guide.
 
-5. Add your `[your-project].happ` file and a `ui.zip` file containing your UI assets to the `./pouch` folder. If you scaffolded your app using the scaffolding tool, the `npm run package` command will have created the `.happ` file as well as a `dist.zip` file for you. In that case you can use said `dist.zip` file and rename it to `ui.zip`.
+5. Add your `[your-project].happ` file and a `ui.zip` file containing your UI assets to the `./pouch` folder replacing the currently present sample `replace-me.happ` file and `ui.zip`. If you scaffolded your app using the scaffolding tool, the `npm run package` command will have created the `.happ` file as well as a `dist.zip` file for you. In that case you can use said `dist.zip` file and rename it to `ui.zip`.
 
 6. Search the repository for `replace-me` and replace it with your project's name or follow the instructions in the comments if provided. **Note:** The `productName` in `src-tauri/tauri.conf.json` must not contain any dots or parentheses (and likely other special characters).
 
