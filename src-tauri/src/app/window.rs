@@ -5,6 +5,7 @@ use tauri::api::dialog::message;
 use tauri::api::process;
 use tauri::{AppHandle, CustomMenuItem, Manager, Menu, Submenu, Window, WindowBuilder, Wry};
 
+use crate::app_state::AppState;
 use crate::commands::profile::open_profile_settings;
 use crate::config;
 use crate::{app_state::filesystem::AppFileSystem, logs::open_logs_folder};
@@ -106,7 +107,7 @@ pub fn build_menu() -> Menu {
 
 pub fn handle_menu_event(event_id: &str, window: &Window<Wry>) {
     let app_handle = window.app_handle();
-    let fs = app_handle.state::<AppFileSystem>();
+    let state = app_handle.state::<AppState>();
     match event_id {
         "version" => message(
             Some(&window),
@@ -117,7 +118,7 @@ pub fn handle_menu_event(event_id: &str, window: &Window<Wry>) {
             ),
         ),
         "change_profile" => open_profile_settings(app_handle).unwrap(),
-        "open_logs" => open_logs_folder(fs.inner().to_owned()),
+        "open_logs" => open_logs_folder(state.fs.to_owned()),
         "devtools" => window.open_devtools(),
         "restart" => {
             process::kill_children();
