@@ -1,3 +1,4 @@
+// TODO: Download this script at build time
 // Source: https://github.com/holochain/hc-launch/blob/develop/crates/holochain_launcher_utils/scripts/dist/holochain_launcher_utils.js
 var JB = Object.defineProperty, vB = Object.defineProperties;
 var bB = Object.getOwnPropertyDescriptors;
