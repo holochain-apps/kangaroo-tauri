@@ -1,176 +1,143 @@
-name: "publish"
+name: 'publish'
 on:
-  push:
-    branches:
-      - release-codesigned
+    push:
+        branches:
+            - release-codesigned
 
 jobs:
-  publish-tauri:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-2019, macos-11, ubuntu-20.04]
-    env:
-      MACOSX_DEPLOYMENT_TARGET: 10.13
-
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
-      - name: install Rust stable
-        uses: actions-rs/toolchain@v1
-        with:
-          override: true
-          toolchain: stable
-      - name: install Go stable
-        uses: actions/setup-go@v4
-        with:
-          go-version: 'stable'
-      - name: install app dependencies and info
-        run: npm install && npm run tauri info
-
-      - name: setup binaries (Windows only)
-        if: matrix.platform == 'windows-2019'
-        run: |
-          mkdir src-tauri/bins
-
-          cargo install --version 0.4.5 lair_keystore
-          $LkPath = Get-Command lair-keystore | Select-Object -ExpandProperty Definition
-          Copy-Item $LkPath -Destination src-tauri/bins/lair-keystore-v0.4.5-x86_64-pc-windows-msvc.exe
-
-
-          cargo install holochain --version holochain-v0.3.2 --locked --features sqlite-encrypted
-          $HcPath = Get-Command holochain | Select-Object -ExpandProperty Definition
-          Copy-Item $HcPath -Destination src-tauri/bins/holochain-v0.3.2-x86_64-pc-windows-msvc.exe
-
-
-      - name: setup binaries (macos only)
-        if: matrix.platform == 'macos-11'
-        run: |
-          mkdir src-tauri/bins
-
-          cargo install --version 0.4.5 lair_keystore
-          LAIR_PATH=$(which lair-keystore)
-          cp $LAIR_PATH src-tauri/bins/lair-keystore-v0.4.5-x86_64-apple-darwin
-
-          cargo install holochain --version holochain-v0.3.2 --locked --features sqlite-encrypted
-          HOLOCHAIN_PATH=$(which holochain)
-          cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v0.3.2-x86_64-apple-darwin
-
-
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libcanberra-gtk-module libcanberra-gtk3-module build-essential curl wget libssl-dev libgtk-3-dev squashfs-tools libgtksourceview-3.0-dev libappindicator3-dev patchelf librsvg2-dev ayatana-indicator-application
-
-      - name: setup binaries (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
-        run: |
-          mkdir src-tauri/bins
-
-          cargo install --version 0.4.2 lair_keystore
-          LAIR_PATH=$(which lair-keystore)
-          cp $LAIR_PATH src-tauri/bins/lair-keystore-v0.4.5-x86_64-unknown-linux-gnu
-
-          cargo install holochain --version holochain-v0.3.2 --locked --features sqlite-encrypted
-          HOLOCHAIN_PATH=$(which holochain)
-          cp $HOLOCHAIN_PATH src-tauri/bins/holochain-v0.3.2-x86_64-unknown-linux-gnu
-
-
-      - name: generate dist folder
-        run: npm run dist
-
-      - name: build the app (macOS and Linux only)
-        if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is NOT wanted
-        uses: tauri-apps/tauri-action@dev
+    publish-tauri:
+        permissions:
+            contents: write
+        strategy:
+            fail-fast: false
+            matrix:
+                platform: [windows-2019, macos-11, ubuntu-20.04]
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+            MACOSX_DEPLOYMENT_TARGET: 10.13
 
-        with:
-          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "replace-me v__VERSION__"
-          releaseBody: "See assets below to download and install this version."
-          releaseDraft: true
-          prerelease: true
-          args: --verbose
+        runs-on: ${{ matrix.platform }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: setup node
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 16
+            - name: install Rust stable
+              uses: actions-rs/toolchain@v1
+              with:
+                  override: true
+                  toolchain: stable
+            - name: install Go stable
+              uses: actions/setup-go@v4
+              with:
+                  go-version: 'stable'
+            - name: install app dependencies and info
+              run: npm install && npm run tauri info
 
+            - name: setup binaries (Windows only)
+              if: matrix.platform == 'windows-2019'
+              run: ./setup/install-binaries.sh
 
-      ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
-      ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
-      ### HELP Remove everything below if Windows code signing is NOT wanted.
+            - name: setup binaries (macos only)
+              if: matrix.platform == 'macos-11'
+              run: ./setup/install-binaries.sh
 
-      - name: build and sign the app (Windows only)
-        if: matrix.platform == 'windows-2019'
-        run: |
+            - name: install dependencies (ubuntu only)
+              if: matrix.platform == 'ubuntu-20.04'
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libwebkit2gtk-4.0-dev libcanberra-gtk-module libcanberra-gtk3-module build-essential curl wget libssl-dev libgtk-3-dev squashfs-tools libgtksourceview-3.0-dev libappindicator3-dev patchelf librsvg2-dev ayatana-indicator-application
 
-          npm run tauri build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
+            - name: setup binaries (ubuntu only)
+              if: matrix.platform == 'ubuntu-20.04'
+              run: ./setup/install-binaries.sh
 
-          dotnet tool install --global AzureSignTool
+            - name: generate dist folder
+              run: npm run dist
 
-          # replace-me -- HELP
-          # 1. replace all occurrences of [[GITHUB_REPO_NAME]] with the name you of your GitHub repository
-          # 2. replace all occurrences of [[productName]] with the productName field in tauri.conf.json
-          # 3. replace all occurrences of [[version]] with the version field in tauri.conf.json
-          # !! NOTE: The version field needs to be updated manually here with each new version of your app, otherwise the Windows build will fail.
+            - name: build the app (macOS and Linux only)
+              if: matrix.platform == 'ubuntu-20.04' || matrix.platform == 'macos-11' # HELP remove this line if Windows code signing is NOT wanted
+              uses: tauri-apps/tauri-action@dev
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  ENABLE_CODE_SIGNING: ${{ secrets.APPLE_CERTIFICATE }}
+                  APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+                  APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+                  APPLE_ID: ${{ secrets.APPLE_ID }}
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+                  APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
-          # sign the .msi file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi"
-          # sign the .exe file
-          AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe"
+              with:
+                  tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+                  releaseName: 'replace-me v__VERSION__'
+                  releaseBody: 'See assets below to download and install this version.'
+                  releaseDraft: true
+                  prerelease: true
+                  args: --verbose
 
-          # # Uncomment the lines below if you have the updater enabled
-          # # =========================================================
+            ### Everything below this line is code signing for Windows via azure key vault, following these instructions:
+            ### https://melatonin.dev/blog/how-to-code-sign-windows-installers-with-an-ev-cert-on-github-actions/
+            ### HELP Remove everything below if Windows code signing is NOT wanted.
 
-          # # remove the .msi.zip and .msi.zip.sig files generated by tauri's build command as they are not code signed
-          # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip"
-          # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip.sig"
-          # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip"
-          # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip.sig"
+            - name: build and sign the app (Windows only)
+              if: matrix.platform == 'windows-2019'
+              run: |
 
-          # # zip and sign the code signed .msi
-          # 7z a -mx=0 "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi"
-          # npm run tauri signer sign "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" -- -k ${{ secrets.TAURI_PRIVATE_KEY }} -p "${{ secrets.TAURI_KEY_PASSWORD }}"
+                  npm run tauri build -- --verbose # building in verbose mode to get reasonable logging output in case of failure
 
-          # 7z a -mx=0 "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip" "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe"
-          # npm run tauri signer sign "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip" -- -k ${{ secrets.TAURI_PRIVATE_KEY_0_2 }} -p "${{ secrets.TAURI_KEY_PASSWORD }}"
+                  dotnet tool install --global AzureSignTool
 
-          # # =========================================================
+                  # replace-me -- HELP
+                  # 1. replace all occurrences of [[GITHUB_REPO_NAME]] with the name you of your GitHub repository
+                  # 2. replace all occurrences of [[productName]] with the productName field in tauri.conf.json
+                  # 3. replace all occurrences of [[version]] with the version field in tauri.conf.json
+                  # !! NOTE: The version field needs to be updated manually here with each new version of your app, otherwise the Windows build will fail.
 
-          # log hashes before and after code signing to verify that the uploaded assets are the right ones
-          CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi" SHA256
-          CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe" SHA256
-          # # Uncomment the lines below if you have the updater enabled
-          # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" SHA256
-          # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip.sig" SHA256
-        env:
-          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+                  # sign the .msi file
+                  AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi"
+                  # sign the .exe file
+                  AzureSignTool sign -kvu "${{ secrets.AZURE_KEY_VAULT_URI }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc ${{ secrets.AZURE_CERT_NAME }} -tr http://timestamp.digicert.com -v "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe"
 
+                  # # Uncomment the lines below if you have the updater enabled
+                  # # =========================================================
 
-      - name: upload signed .msi, .msi.zip, .msi.zip.sig, .exe, .nsis.zip, .nsis.zip.sig files to github release (Windows only)
-        uses: matthme/tauri-action-ev-signing@upload-only
-        if: matrix.platform == 'windows-2019'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: "replace-me v__VERSION__"
-          releaseBody: "See assets below to download and install this version."
-          releaseDraft: true
-          prerelease: true
-          args: --verbose
+                  # # remove the .msi.zip and .msi.zip.sig files generated by tauri's build command as they are not code signed
+                  # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip"
+                  # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip.sig"
+                  # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip"
+                  # rm "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip.sig"
+
+                  # # zip and sign the code signed .msi
+                  # 7z a -mx=0 "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi"
+                  # npm run tauri signer sign "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" -- -k ${{ secrets.TAURI_PRIVATE_KEY }} -p "${{ secrets.TAURI_KEY_PASSWORD }}"
+
+                  # 7z a -mx=0 "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip" "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe"
+                  # npm run tauri signer sign "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.nsis.zip" -- -k ${{ secrets.TAURI_PRIVATE_KEY_0_2 }} -p "${{ secrets.TAURI_KEY_PASSWORD }}"
+
+                  # # =========================================================
+
+                  # log hashes before and after code signing to verify that the uploaded assets are the right ones
+                  CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi" SHA256
+                  CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\nsis\[[productName]]_[[version]]_x64-setup.exe" SHA256
+                  # # Uncomment the lines below if you have the updater enabled
+                  # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip" SHA256
+                  # CertUtil -hashfile "D:\a\[[GITHUB_REPO_NAME]]\[[GITHUB_REPO_NAME]]\src-tauri\target\release\bundle\msi\[[productName]]_[[version]]_x64_en-US.msi.zip.sig" SHA256
+              env:
+                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+            - name: upload signed .msi, .msi.zip, .msi.zip.sig, .exe, .nsis.zip, .nsis.zip.sig files to github release (Windows only)
+              uses: matthme/tauri-action-ev-signing@upload-only
+              if: matrix.platform == 'windows-2019'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+                  releaseName: 'replace-me v__VERSION__'
+                  releaseBody: 'See assets below to download and install this version.'
+                  releaseDraft: true
+                  prerelease: true
+                  args: --verbose
